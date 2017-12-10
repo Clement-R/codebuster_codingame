@@ -1,6 +1,9 @@
 import os
+import pyperclip
 
 if __name__ == "__main__":
+    os.chdir("E:\_Dev\AI_codebuster")
+
     with open("master.cs", 'w') as code_file:
         content = """
 using System;
@@ -17,7 +20,12 @@ using System.Collections.Generic;
                     print(os.path.join(root, file))
                     with open(os.path.join(root, file), 'r') as content_file:
                         copied_content = [line for line in content_file.readlines() if "using" not in line]
-                        content += "".join(copied_content)
+                        content += "".join(copied_content).replace("ï»¿", "")
                         content += "\n"
                         print(content)
         code_file.write(content)
+        pyperclip.copy(content)
+
+
+
+
