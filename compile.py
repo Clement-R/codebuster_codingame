@@ -3,14 +3,14 @@ import os
 if __name__ == "__main__":
     with open("master.cs", 'w') as code_file:
         content = """
-    using System;
-    using System.Linq;
-    using System.IO;
-    using System.Text;
-    using System.Collections;
-    using System.Collections.Generic;
+using System;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
 
-        """
+"""
         for root, dirs, files in os.walk("./"):
             for file in files:
                 if file.endswith(".cs") and not "master" in file and not "Temporary" in file:
