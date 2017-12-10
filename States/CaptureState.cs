@@ -1,8 +1,8 @@
 ﻿namespace CodeBuster
 {
-    class MovingState : IBusterState
+    class CaptureState : BusterState
     {
-        public MovingState()
+        public CaptureState()
         {
         }
 
@@ -13,14 +13,13 @@
 
         public override string Update(Buster buster)
         {
-            return "MOVE 8000 4500";
-            // MOVE x y
+            return "BUST id";
+            // BUST id
         }
 
         public override void ComputeInformations(Buster buster)
         {
             // TODO : define possible transitions
-            // TODO : Is buster in range to capture a ghost
         }
     }
 }

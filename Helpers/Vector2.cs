@@ -1,4 +1,6 @@
-﻿namespace CodeBuster
+﻿using System;
+
+namespace CodeBuster
 {
     class Vector2
     {

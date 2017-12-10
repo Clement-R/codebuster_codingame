@@ -1,6 +1,6 @@
 ﻿namespace CodeBuster
 {
-    class ReleaseState : IBusterState
+    class ReleaseState : BusterState
     {
         public ReleaseState()
         {
@@ -22,7 +22,7 @@
             // If buster has no ghost switch to move
             if (!buster.GhostCaptured)
             {
-                buster.State = IBusterState.moveState;
+                buster.State = BusterState.MoveState;
             }
         }
     }

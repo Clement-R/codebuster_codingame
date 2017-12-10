@@ -1,4 +1,11 @@
-﻿namespace CodeBuster
+﻿using System;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace CodeBuster
 {
     class Player
     {
@@ -13,19 +20,19 @@
             Vector2 basePosition;
 
             // Initialize FSM
-            if (IBusterState.moveState == null)
+            if (BusterState.MoveState == null)
             {
-                IBusterState.moveState = new MovingState();
+                BusterState.MoveState = new MovingState();
             }
 
-            if (IBusterState.captureState == null)
+            if (BusterState.CaptureState == null)
             {
-                IBusterState.captureState = new CaptureState();
+                BusterState.CaptureState = new CaptureState();
             }
 
-            if (IBusterState.releaseState == null)
+            if (BusterState.ReleaseState == null)
             {
-                IBusterState.releaseState = new ReleaseState();
+                BusterState.ReleaseState = new ReleaseState();
             }
 
             // Initialize game infos

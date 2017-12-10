@@ -1,15 +1,21 @@
-﻿namespace CodeBuster
+
+    using System;
+    using System.Linq;
+    using System.IO;
+    using System.Text;
+    using System.Collections;
+    using System.Collections.Generic;
+
+        ﻿namespace CodeBuster
 {
     class Buster
     {
-        Vector2 Position;
-
-        private Vector2 Position { get; set; }
+        public Vector2 Position { get; set; }
         public int EntityId { get; }
         public bool IsInDropZone { get; set; }
         public bool GhostCaptured { get; set; }
         public bool GhostInRange { get; set; }
-        public IBusterState State { get; set; }
+        public BusterState State { get; set; }
 
         public Buster(Vector2 initialPosition, int entityId)
         {
@@ -22,7 +28,7 @@
             GhostInRange = false;
 
             // Initialize default state
-            State = IBusterState.moveState;
+            State = BusterState.MoveState;
         }
 
         public void ComputeInformations()
@@ -66,7 +72,8 @@
     }
 }
 
-﻿namespace CodeBuster
+
+namespace CodeBuster
 {
     class Vector2
     {
@@ -85,7 +92,8 @@
         }
     }
 }
-﻿namespace CodeBuster
+
+namespace CodeBuster
 {
     class Player
     {
@@ -100,19 +108,19 @@
             Vector2 basePosition;
 
             // Initialize FSM
-            if (IBusterState.moveState == null)
+            if (BusterState.MoveState == null)
             {
-                IBusterState.moveState = new MovingState();
+                BusterState.MoveState = new MovingState();
             }
 
-            if (IBusterState.captureState == null)
+            if (BusterState.CaptureState == null)
             {
-                IBusterState.captureState = new CaptureState();
+                BusterState.CaptureState = new CaptureState();
             }
 
-            if (IBusterState.releaseState == null)
+            if (BusterState.ReleaseState == null)
             {
-                IBusterState.releaseState = new ReleaseState();
+                BusterState.ReleaseState = new ReleaseState();
             }
 
             // Initialize game infos
@@ -260,7 +268,21 @@
 }
 ﻿namespace CodeBuster
 {
-    class CaptureState : IBusterState
+    class BusterState
+    {
+        public static MovingState MoveState { get; set; }
+        public static CaptureState CaptureState { get; set; }
+        public static ReleaseState ReleaseState { get; set; }
+
+        public virtual string Update(Buster buster) { return ""; }
+        public virtual void ComputeInformations(Buster buster) { }
+        public virtual void Enter(Buster buster) { }
+    }
+}
+
+﻿namespace CodeBuster
+{
+    class CaptureState : BusterState
     {
         public CaptureState()
         {
@@ -286,27 +308,7 @@
 
 ﻿namespace CodeBuster
 {
-    interface IBusterState
-    {
-        public MovingState MoveState { get; set; }
-        public CaptureState CaptureState { get; set; }
-        public ReleaseState ReleaseState { get; set; }
-
-        private static MovingState moveState = null;
-        private static CaptureState captureState = null;
-        private static ReleaseState releaseState = null;
-
-        public IBusterState() { }
-
-        public virtual string Update(Buster buster) { return ""; }
-        public virtual void ComputeInformations(Buster buster) { }
-        public virtual void Enter(Buster buster) { }
-    }
-}
-
-﻿namespace CodeBuster
-{
-    class MovingState : IBusterState
+    class MovingState : BusterState
     {
         public MovingState()
         {
@@ -332,7 +334,7 @@
 }
 ﻿namespace CodeBuster
 {
-    class ReleaseState : IBusterState
+    class ReleaseState : BusterState
     {
         public ReleaseState()
         {
@@ -354,7 +356,7 @@
             // If buster has no ghost switch to move
             if (!buster.GhostCaptured)
             {
-                buster.State = IBusterState.moveState;
+                buster.State = BusterState.MoveState;
             }
         }
     }

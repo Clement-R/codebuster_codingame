@@ -2,14 +2,12 @@
 {
     class Buster
     {
-        Vector2 Position;
-
-        private Vector2 Position { get; set; }
+        public Vector2 Position { get; set; }
         public int EntityId { get; }
         public bool IsInDropZone { get; set; }
         public bool GhostCaptured { get; set; }
         public bool GhostInRange { get; set; }
-        public IBusterState State { get; set; }
+        public BusterState State { get; set; }
 
         public Buster(Vector2 initialPosition, int entityId)
         {
@@ -22,7 +20,7 @@
             GhostInRange = false;
 
             // Initialize default state
-            State = IBusterState.moveState;
+            State = BusterState.MoveState;
         }
 
         public void ComputeInformations()
