@@ -109,31 +109,54 @@ namespace CodeBuster
 
                 // TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
 
-                // Foreach known ghost get distance to each buster
+
                 // TODO : Keep a list of each ghost a buster can capture
                 // TODO : Get closest ghost for each buster
                 // TODO : If two buster have the same ghost change to number 2 for one of them
-
+                
                 // buster id, ghost id, distance between them
                 List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
-
+                // Foreach known ghost get distance to each buster if in range of capture
                 foreach (Entity ghost in ghosts)
                 {
-                    for (int i = 0; i < bustersPerPlayer; i++)
+                    if(ghost.IsVisible)
                     {
-                        int distanceToGhost = Vector2.Distance(busters[i].Position, ghost.Position);
-
-                        if (distanceToGhost > 900 && distanceToGhost < 1760)
+                        for (int i = 0; i < bustersPerPlayer; i++)
                         {
-                            // busterToGhost.Add(new Tuple<int, int, int>(  ));
-                            // TODO : Get closest buster
-                            // TODO : Check if this buster is not busy
-                            // TODO : Tell this buster to capture the ghost
+                            int distanceToGhost = Vector2.Distance(busters[i].Position, ghost.Position);
+
+                            if (distanceToGhost > 900 && distanceToGhost < 1760)
+                            {
+                                busterToGhost.Add(new Tuple<int, int, int>(i, ghost.EntityId, distanceToGhost));
+                            }
                         }
                     }
                 }
-                // TODO : Store this distance for this frame (needs to be recompute at each frame)
 
+                // Get closest ghost
+                for (int i = 0; i < bustersPerPlayer; i++)
+                {
+                    // Check if this buster is not busy
+                    // TODO : This should not be handled by the MAS, this look like agent responsibility
+                    if(busters[i].State == BusterState.MoveState && !busters[i].GhostCaptured)
+                    {
+                        int lowest = 9999;
+                        int ghostId = -1;
+                        foreach (var item in busterToGhost.FindAll(e => e.Item1 == busters[i].EntityId))
+                        {
+                            if(item.Item3 < lowest)
+                            {
+                                ghostId = item.Item2;
+                            }
+                        }
+
+                        busters[i].GhostInRange = ghostId;
+                    }
+                }
+
+                // TODO : Tell this buster to capture the ghost
+
+                // TODO : Store this distance for this frame (needs to be recompute at each frame)
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
                     // Check if in base range
