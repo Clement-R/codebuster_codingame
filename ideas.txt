@@ -1,0 +1,33 @@
+Etats possible :
+	- Capture
+	- Déplacement
+
+A penser :
+	- Position à modifier selon le coin attribué (équipe 0 ou 1)
+	- Les entitées vues sont globales (pas par Buster)
+
+
+Optimiser drop fantôme : le faire au plus loin possible de la base (rayon 1600)
+
+
+// est-ce qu'un agent doit vraiment avoir de l'intelligence ? Pas sûr
+Stratégies agent :
+	° Offensif brut
+	° Défensif brut
+
+Stratégies équipe :
+	° Strat rush :
+		- Chaque agent va vers le centre et tente d'attraper le premier fantôme disponible
+		- Lorsqu'un nouveau fantôme est détecté, le gestionnaire d'agents va chercher le buster le plus proche pour le capturer
+		- Le gestionnaire d'agents garde en mémoire le fantôme capturé et l'agent qui le capture
+		- Dès qu'un agent a capturé un fantôme il rush le rayon de la base pour aller le déposer
+
+	° Strat 1 :
+		- Déplacement 2 par 2
+			. Opti : garder une distance entre les 2 pour couvrir plus de distance
+		- Découverte rapide de la carte
+
+
+
+// TODO : opti - space separation : voronoi, quadtree
+// TODO : change strat if we have an even or an odd number of busters
