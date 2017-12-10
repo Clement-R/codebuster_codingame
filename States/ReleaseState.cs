@@ -18,9 +18,14 @@
 
         public override void ComputeInformations(Buster buster)
         {
-            // TODO : define possible transitions
-            // If buster has no ghost switch to move
-            if (!buster.GhostCaptured)
+            // If we've drop our ghost and a ghost is in range
+            if (!buster.IsHoldingAGhost() && buster.CanCapture())
+            {
+                buster.State = BusterState.CaptureState;
+            }
+
+            // If we've drop our ghost we can now move
+            if (!buster.IsHoldingAGhost())
             {
                 buster.State = BusterState.MoveState;
             }

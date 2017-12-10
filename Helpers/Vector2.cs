@@ -17,5 +17,10 @@ namespace CodeBuster
         {
             return (int)Math.Ceiling(Math.Sqrt(Math.Pow((to.x - from.x), 2) + Math.Pow((to.y - from.y), 2)));
         }
+
+        public override string ToString()
+        {
+            return "X: " + x.ToString() + " / Y: " + y.ToString();
+        }
     }
 }
