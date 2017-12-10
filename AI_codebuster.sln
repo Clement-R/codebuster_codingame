@@ -1,15 +1,51 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2796094-286B-4356-B14D-FC31BA3CB524}"
 	ProjectSection(SolutionItems) = preProject
 		Class1.cs = Class1.cs
+		compile.py = compile.py
+		..\..\IA_codebuster_tips = ..\..\IA_codebuster_tips
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "States", "States", "{BD48652D-5AF9-4C34-BB52-5DF99C874B76}"
+	ProjectSection(SolutionItems) = preProject
+		State\CaptureState.cs = State\CaptureState.cs
+		State\IBusterState.cs = State\IBusterState.cs
+		State\MovingState.cs = State\MovingState.cs
+		State\ReleaseState.cs = State\ReleaseState.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Entities", "Entities", "{30C6F549-A43D-4451-9765-0873DEDF6476}"
+	ProjectSection(SolutionItems) = preProject
+		Entities\Buster.cs = Entities\Buster.cs
+		Entities\Entity.cs = Entities\Entity.cs
+		Entities\Ghost.cs = Entities\Ghost.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{B9A748EA-42A3-4C6F-8DED-F3D1E41CC684}"
+	ProjectSection(SolutionItems) = preProject
+		Helpers\Vector2.cs = Helpers\Vector2.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MAS", "MAS", "{CC96DBE2-F8F2-45FC-87A3-9AA18149CB76}"
+	ProjectSection(SolutionItems) = preProject
+		MAS\Player.cs = MAS\Player.cs
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BD48652D-5AF9-4C34-BB52-5DF99C874B76} = {B2796094-286B-4356-B14D-FC31BA3CB524}
+		{30C6F549-A43D-4451-9765-0873DEDF6476} = {B2796094-286B-4356-B14D-FC31BA3CB524}
+		{B9A748EA-42A3-4C6F-8DED-F3D1E41CC684} = {B2796094-286B-4356-B14D-FC31BA3CB524}
+		{CC96DBE2-F8F2-45FC-87A3-9AA18149CB76} = {B2796094-286B-4356-B14D-FC31BA3CB524}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D6D6D83A-AF3C-4722-A6C3-7098796BD689}
 	EndGlobalSection
 EndGlobal

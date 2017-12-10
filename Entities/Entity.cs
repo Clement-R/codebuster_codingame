@@ -1,0 +1,17 @@
+﻿namespace CodeBuster
+{
+    class Entity
+    {
+        public Vector2 Position { get; set; }
+        public int EntityId { get; }
+        public bool IsVisible { get; set; }
+
+        public Entity(Vector2 initialPosition, int entityId)
+        {
+            this.Position = initialPosition;
+            this.EntityId = entityId;
+
+            this.IsVisible = true;
+        }
+    }
+}
