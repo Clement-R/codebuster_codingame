@@ -3,6 +3,7 @@
     class Buster
     {
         public Vector2 Position { get; set; }
+        public Vector2 TargetPosition { get; set; }
         public Vector2 BasePosition { get; set; }
         public int EntityId { get; }
         public bool IsInDropZone { get; set; }
@@ -20,6 +21,9 @@
             GhostCaptured = false;
             BasePosition = basePosition;
             GhostInRange = -1;
+
+            // Initialize MoveToPosition
+            TargetPosition = initialPosition;
 
             // Initialize default state
             State = BusterState.MoveState;

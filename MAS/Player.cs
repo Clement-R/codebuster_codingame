@@ -182,7 +182,7 @@ namespace CodeBuster
             // Initialize FSM
             if (BusterState.MoveState == null)
             {
-                BusterState.MoveState = new MovingState();
+                BusterState.MoveState = new MoveState();
             }
 
             if (BusterState.CaptureState == null)
