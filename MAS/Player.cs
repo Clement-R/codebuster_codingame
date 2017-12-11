@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace CodeBuster
 {
@@ -72,13 +73,12 @@ namespace CodeBuster
                         }
                         else
                         {
-                            print("Ghost : " + entityId);
                             ghosts[foundId].Position = new Vector2(x, y);
                             ghosts[foundId].IsVisible = true;
                         }
                     }
                     
-                    
+                    // Update busters informations
                     if (entityType == myTeamId)
                     {
                         Buster buster = busters.Find(e => e.EntityId == entityId);
@@ -86,10 +86,13 @@ namespace CodeBuster
                         if (value != -1)
                         {
                             buster.GhostCaptured = true;
+                            ghosts.Find(e => e.EntityId == value).Captured = true;
+                            // TODO : Mark this ghost as captured so we can't capture it again
                         }
                         else
                         {
                             buster.GhostCaptured = false;
+                            buster.GhostInRange = -1;
                         }
 
                         // Update its position
@@ -109,18 +112,16 @@ namespace CodeBuster
                 List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
 
                 // Foreach known ghost get distance to each buster if in range of capture
-                foreach (Entity ghost in ghosts)
+                foreach (Ghost ghost in ghosts.FindAll(e => e.IsVisible == true && e.Captured == false))
                 {
-                    if(ghost.IsVisible)
+                    for (int i = 0; i < bustersPerPlayer; i++)
                     {
-                        for (int i = 0; i < bustersPerPlayer; i++)
-                        {
-                            int distanceToGhost = Vector2.Distance(busters[i].Position, ghost.Position);
+                        int distanceToGhost = (int) Vector2.Distance(busters[i].Position, ghost.Position);
 
-                            if (distanceToGhost > 900 && distanceToGhost < 1760)
-                            {
-                                busterToGhost.Add(new Tuple<int, int, int>(busters[i].EntityId, ghost.EntityId, distanceToGhost));
-                            }
+                        // Check if we can capture a ghost
+                        if (distanceToGhost > 900 && distanceToGhost < 1760)
+                        {
+                            busterToGhost.Add(new Tuple<int, int, int>(busters[i].EntityId, ghost.EntityId, distanceToGhost));
                         }
                     }
                 }
@@ -144,13 +145,32 @@ namespace CodeBuster
                             }
                         }
                         busters[i].GhostInRange = ghostId;
+
+                        // If no ghost can be captured we want to chase the known ghosts
+                        if(ghostId == -1)
+                        {
+                            Vector2 nextPos = new Vector2(0, 0);
+
+                            float smallest = 999999;
+                            foreach (Entity ghost in ghosts.FindAll(e => e.Captured == false))
+                            {
+                                float dist = Vector2.Distance(busters[i].Position, ghost.Position);
+                                if(dist < smallest)
+                                {
+                                    nextPos = ghost.Position;
+                                    smallest = dist;
+                                }
+                            }
+
+                            if (nextPos != new Vector2(0, 0))
+                            {
+                                busters[i].TargetPosition = nextPos;
+                            }
+                        }
                     }
                 }
 
-                // If no ghost is in range but see some of them, we go to capture them
-
                 // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
-                // TODO : Tell this buster to capture the ghost
 
                 // Check for each buster if they are in base range
                 for (int i = 0; i < bustersPerPlayer; i++)

@@ -1,4 +1,6 @@
-﻿namespace CodeBuster
+﻿using System.Numerics;
+
+namespace CodeBuster
 {
     class Buster
     {
@@ -10,11 +12,12 @@
         public bool GhostCaptured { get; set; }
         public int GhostInRange { get; set; }
         public BusterState State { get; set; }
+        public BusterState LastState { get; set; }
 
         public Buster(Vector2 initialPosition, int entityId, Vector2 basePosition)
         {
-            this.Position = initialPosition;
-            this.EntityId = entityId;
+            Position = initialPosition;
+            EntityId = entityId;
 
             // Initialize values
             IsInDropZone = false;
@@ -36,6 +39,13 @@
             // TODO : Check if ghost captured
             Player.print(State.ToString());
             State.ComputeInformations(this);
+
+            if(State != LastState)
+            {
+                State.Enter(this);
+            }
+
+            LastState = State;
         }
 
         public string ComputeNextOrder()

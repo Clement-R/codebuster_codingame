@@ -1,4 +1,6 @@
-﻿namespace CodeBuster
+﻿using System.Numerics;
+
+namespace CodeBuster
 {
     class Entity
     {

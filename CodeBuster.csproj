@@ -37,17 +37,21 @@
   <ItemGroup>
     <Content Include="compile.py" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Compile Include="Entities\Buster.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Ghost.cs" />
-    <Compile Include="Helpers\Vector2.cs" />
     <Compile Include="MAS\Player.cs" />
     <Compile Include="States\CaptureState.cs" />
     <Compile Include="States\BusterState.cs" />
     <Compile Include="States\MoveState.cs" />
     <Compile Include="States\ReleaseState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

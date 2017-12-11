@@ -33,3 +33,8 @@ Stratégies équipe :
 
 // TODO : opti - space separation : voronoi, quadtree
 // TODO : change strat if we have an even or an odd number of busters
+
+
+BUGS :
+	- Ne pas aller dans la base après drop
+	- Drop au plus loin possible

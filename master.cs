@@ -5,29 +5,36 @@ using System.IO;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+
 
 namespace CodeBuster
 {
     class Buster
     {
         public Vector2 Position { get; set; }
+        public Vector2 TargetPosition { get; set; }
         public Vector2 BasePosition { get; set; }
         public int EntityId { get; }
         public bool IsInDropZone { get; set; }
         public bool GhostCaptured { get; set; }
         public int GhostInRange { get; set; }
         public BusterState State { get; set; }
+        public BusterState LastState { get; set; }
 
         public Buster(Vector2 initialPosition, int entityId, Vector2 basePosition)
         {
-            this.Position = initialPosition;
-            this.EntityId = entityId;
+            Position = initialPosition;
+            EntityId = entityId;
 
             // Initialize values
             IsInDropZone = false;
             GhostCaptured = false;
             BasePosition = basePosition;
             GhostInRange = -1;
+
+            // Initialize MoveToPosition
+            TargetPosition = initialPosition;
 
             // Initialize default state
             State = BusterState.MoveState;
@@ -40,6 +47,13 @@ namespace CodeBuster
             // TODO : Check if ghost captured
             Player.print(State.ToString());
             State.ComputeInformations(this);
+
+            if(State != LastState)
+            {
+                State.Enter(this);
+            }
+
+            LastState = State;
         }
 
         public string ComputeNextOrder()
@@ -78,6 +92,7 @@ namespace CodeBuster
         }
     }
 }
+
 namespace CodeBuster
 {
     class Entity
@@ -95,41 +110,19 @@ namespace CodeBuster
         }
     }
 }
+
 namespace CodeBuster
 {
     class Ghost : Entity
     {
+        public bool Captured { get; set; }
+
         public Ghost(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
         {
         }
     }
 }
 
-
-namespace CodeBuster
-{
-    class Vector2
-    {
-        public int x { get; set; }
-        public int y { get; set; }
-
-        public Vector2(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-
-        public static int Distance(Vector2 from, Vector2 to)
-        {
-            return (int)Math.Ceiling(Math.Sqrt(Math.Pow((to.x - from.x), 2) + Math.Pow((to.y - from.y), 2)));
-        }
-
-        public override string ToString()
-        {
-            return "X: " + x.ToString() + " / Y: " + y.ToString();
-        }
-    }
-}
 
 namespace CodeBuster
 {
@@ -198,13 +191,12 @@ namespace CodeBuster
                         }
                         else
                         {
-                            print("Ghost : " + entityId);
                             ghosts[foundId].Position = new Vector2(x, y);
                             ghosts[foundId].IsVisible = true;
                         }
                     }
                     
-                    
+                    // Update busters informations
                     if (entityType == myTeamId)
                     {
                         Buster buster = busters.Find(e => e.EntityId == entityId);
@@ -212,10 +204,13 @@ namespace CodeBuster
                         if (value != -1)
                         {
                             buster.GhostCaptured = true;
+                            ghosts.Find(e => e.EntityId == value).Captured = true;
+                            // TODO : Mark this ghost as captured so we can't capture it again
                         }
                         else
                         {
                             buster.GhostCaptured = false;
+                            buster.GhostInRange = -1;
                         }
 
                         // Update its position
@@ -235,18 +230,16 @@ namespace CodeBuster
                 List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
 
                 // Foreach known ghost get distance to each buster if in range of capture
-                foreach (Entity ghost in ghosts)
+                foreach (Ghost ghost in ghosts.FindAll(e => e.IsVisible == true && e.Captured == false))
                 {
-                    if(ghost.IsVisible)
+                    for (int i = 0; i < bustersPerPlayer; i++)
                     {
-                        for (int i = 0; i < bustersPerPlayer; i++)
-                        {
-                            int distanceToGhost = Vector2.Distance(busters[i].Position, ghost.Position);
+                        int distanceToGhost = (int) Vector2.Distance(busters[i].Position, ghost.Position);
 
-                            if (distanceToGhost > 900 && distanceToGhost < 1760)
-                            {
-                                busterToGhost.Add(new Tuple<int, int, int>(busters[i].EntityId, ghost.EntityId, distanceToGhost));
-                            }
+                        // Check if we can capture a ghost
+                        if (distanceToGhost > 900 && distanceToGhost < 1760)
+                        {
+                            busterToGhost.Add(new Tuple<int, int, int>(busters[i].EntityId, ghost.EntityId, distanceToGhost));
                         }
                     }
                 }
@@ -270,13 +263,32 @@ namespace CodeBuster
                             }
                         }
                         busters[i].GhostInRange = ghostId;
+
+                        // If no ghost can be captured we want to chase the known ghosts
+                        if(ghostId == -1)
+                        {
+                            Vector2 nextPos = new Vector2(0, 0);
+
+                            float smallest = 999999;
+                            foreach (Entity ghost in ghosts.FindAll(e => e.Captured == false))
+                            {
+                                float dist = Vector2.Distance(busters[i].Position, ghost.Position);
+                                if(dist < smallest)
+                                {
+                                    nextPos = ghost.Position;
+                                    smallest = dist;
+                                }
+                            }
+
+                            if (nextPos != new Vector2(0, 0))
+                            {
+                                busters[i].TargetPosition = nextPos;
+                            }
+                        }
                     }
                 }
 
-                // If no ghost is in range but see some of them, we go to capture them
-
                 // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
-                // TODO : Tell this buster to capture the ghost
 
                 // Check for each buster if they are in base range
                 for (int i = 0; i < bustersPerPlayer; i++)
@@ -308,7 +320,7 @@ namespace CodeBuster
             // Initialize FSM
             if (BusterState.MoveState == null)
             {
-                BusterState.MoveState = new MovingState();
+                BusterState.MoveState = new MoveState();
             }
 
             if (BusterState.CaptureState == null)
@@ -327,7 +339,7 @@ namespace CodeBuster
 {
     class BusterState
     {
-        public static MovingState MoveState { get; set; }
+        public static MoveState MoveState { get; set; }
         public static CaptureState CaptureState { get; set; }
         public static ReleaseState ReleaseState { get; set; }
 
@@ -373,30 +385,64 @@ namespace CodeBuster
     }
 }
 
+
 namespace CodeBuster
 {
-    class MovingState : BusterState
+    class MoveState : BusterState
     {
-        public MovingState()
+        public static System.Random rng = null;
+
+        public MoveState()
         {
+            if(rng == null)
+            {
+                rng = new System.Random();
+            }
         }
 
         public override void Enter(Buster buster)
         {
-
+            // TODO : Change this value
+            Player.print("ENTER STATE CALLED");
+            buster.TargetPosition = new Vector2(8000, 4500);
         }
 
         public override string Update(Buster buster)
         {
             if(buster.IsHoldingAGhost())
             {
-                // Go to base
-                Player.print(buster.EntityId + " is going to base with a ghost");
-                return "MOVE " + buster.BasePosition.x + " " + buster.BasePosition.y;
+                // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
+                buster.TargetPosition = buster.BasePosition;
+            }
+            
+            // TODO : Remove the random movement !
+            if(buster.Position == buster.TargetPosition)
+            {
+                buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
+                if (buster.TargetPosition.X <= 0)
+                {
+                    buster.TargetPosition = new Vector2(0, buster.TargetPosition.Y);
+                }
+                if (buster.TargetPosition.X >= 16000)
+                {
+                    buster.TargetPosition = new Vector2(16000, buster.TargetPosition.Y);
+                }
+
+                if (buster.TargetPosition.Y <= 0)
+                {
+                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 0);
+                }
+                if (buster.TargetPosition.Y >= 9000)
+                {
+                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
+                }
+
+                // buster.TargetPosition = new Vector2(8000, 4500);
+                // buster.TargetPosition = new Vector2(4000, 2250);
             }
 
-            // Go to the middle of the map
-            return "MOVE 8000 4500";
+            // Go to the target position
+            return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;
         }
 
         public override void ComputeInformations(Buster buster)
@@ -416,6 +462,7 @@ namespace CodeBuster
         }
     }
 }
+ 
 namespace CodeBuster
 {
     class ReleaseState : BusterState

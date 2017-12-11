@@ -1,4 +1,6 @@
-﻿namespace CodeBuster
+﻿using System.Numerics;
+
+namespace CodeBuster
 {
     class MoveState : BusterState
     {
@@ -14,37 +16,39 @@
 
         public override void Enter(Buster buster)
         {
-            
+            // TODO : Change this value
+            Player.print("ENTER STATE CALLED");
+            buster.TargetPosition = new Vector2(8000, 4500);
         }
 
         public override string Update(Buster buster)
         {
             if(buster.IsHoldingAGhost())
             {
-                // Go to base
-                Player.print(buster.EntityId + " is going to base with a ghost");
+                // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
                 buster.TargetPosition = buster.BasePosition;
             }
             
+            // TODO : Remove the random movement !
             if(buster.Position == buster.TargetPosition)
             {
-                buster.TargetPosition = new Vector2(buster.Position.x + rng.Next(-4000, 4000), buster.Position.x + rng.Next(-2000, 2000));
-                if (buster.TargetPosition.x <= 0)
+                buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
+                if (buster.TargetPosition.X <= 0)
                 {
-                    buster.TargetPosition.x = 0;
+                    buster.TargetPosition = new Vector2(0, buster.TargetPosition.Y);
                 }
-                if (buster.TargetPosition.x >= 16000)
+                if (buster.TargetPosition.X >= 16000)
                 {
-                    buster.TargetPosition.x = 16000;
+                    buster.TargetPosition = new Vector2(16000, buster.TargetPosition.Y);
                 }
 
-                if (buster.TargetPosition.y <= 0)
+                if (buster.TargetPosition.Y <= 0)
                 {
-                    buster.TargetPosition.y = 0;
+                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 0);
                 }
-                if (buster.TargetPosition.y >= 9000)
+                if (buster.TargetPosition.Y >= 9000)
                 {
-                    buster.TargetPosition.y = 9000;
+                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
                 }
 
                 // buster.TargetPosition = new Vector2(8000, 4500);
@@ -52,8 +56,7 @@
             }
 
             // Go to the target position
-            Player.print(buster.TargetPosition.ToString());
-            return "MOVE " + buster.TargetPosition.x + " " + buster.TargetPosition.y;
+            return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;
         }
 
         public override void ComputeInformations(Buster buster)
