@@ -16,6 +16,7 @@
             if(buster.IsHoldingAGhost())
             {
                 // Go to base
+                Player.print(buster.EntityId + " is going to base with a ghost");
                 return "MOVE " + buster.BasePosition.x + " " + buster.BasePosition.y;
             }
 
@@ -34,6 +35,7 @@
             // If we've moved to a ghost and we're in range to capture it
             if(buster.CanCapture())
             {
+                Player.print(buster.EntityId + " is going to capture");
                 buster.State = BusterState.CaptureState;
             }
         }

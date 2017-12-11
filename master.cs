@@ -59,9 +59,7 @@ namespace CodeBuster
 
         public bool CanCapture()
         {
-            Player.print(GhostInRange.ToString());
-
-            if (GhostInRange != -1)
+            if (!GhostCaptured && GhostInRange != -1)
             {
                 return true;
             }
@@ -72,6 +70,11 @@ namespace CodeBuster
         public bool IsHoldingAGhost()
         {
             return GhostCaptured;
+        }
+
+        public void Debug()
+        {
+            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString());
         }
     }
 }
@@ -176,7 +179,7 @@ namespace CodeBuster
                     int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost.
                     int value = int.Parse(inputs[5]); // For busters: Ghost id being carried. For ghosts: number of busters attempting to trap this ghost.
 
-                    // If this is the first turn, we initialize our Busters with their position and id
+                    // If this is the first turn, we initialize our Busters with their position, id and the base position
                     if (!_teamInitialized)
                     {
                         if (entityType == myTeamId)
@@ -195,11 +198,7 @@ namespace CodeBuster
                         }
                         else
                         {
-                            if (entityId == 0)
-                            {
-                                print(busters[1].Position.ToString());
-                                print(ghosts[foundId].Position.ToString());
-                            }
+                            print("Ghost : " + entityId);
                             ghosts[foundId].Position = new Vector2(x, y);
                             ghosts[foundId].IsVisible = true;
                         }
@@ -257,12 +256,11 @@ namespace CodeBuster
                 {
                     // TODO : This should not be handled by the MAS, this look like agent responsibility
                     // Check if this buster is not busy
-                    if (busters[i].State == BusterState.MoveState && !busters[i].GhostCaptured)
+                    if (busters[i].State == BusterState.MoveState && !busters[i].CanCapture())
                     {
                         int lowest = 9999;
                         int ghostId = -1;
                         // Get the closest ghost
-                        print(busterToGhost.FindAll(e => e.Item1 == busters[i].EntityId).Count.ToString());
                         foreach (var item in busterToGhost.FindAll(e => e.Item1 == busters[i].EntityId))
                         {
                             if(item.Item3 < lowest)
@@ -285,6 +283,7 @@ namespace CodeBuster
                 {
                     if (Vector2.Distance(busters[i].Position, basePosition) <= 1600)
                     {
+                        print("Is in drop zone");
                         busters[i].IsInDropZone = true;
                     }
                     else
@@ -292,6 +291,7 @@ namespace CodeBuster
                         busters[i].IsInDropZone = false;
                     }
 
+                    busters[i].Debug();
                     busters[i].ComputeInformations();
                     Console.WriteLine(busters[i].ComputeNextOrder());
                 }
@@ -391,6 +391,7 @@ namespace CodeBuster
             if(buster.IsHoldingAGhost())
             {
                 // Go to base
+                Player.print(buster.EntityId + " is going to base with a ghost");
                 return "MOVE " + buster.BasePosition.x + " " + buster.BasePosition.y;
             }
 
@@ -409,6 +410,7 @@ namespace CodeBuster
             // If we've moved to a ghost and we're in range to capture it
             if(buster.CanCapture())
             {
+                Player.print(buster.EntityId + " is going to capture");
                 buster.State = BusterState.CaptureState;
             }
         }

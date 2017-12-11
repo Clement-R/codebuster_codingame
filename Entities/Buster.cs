@@ -51,9 +51,7 @@
 
         public bool CanCapture()
         {
-            Player.print(GhostInRange.ToString());
-
-            if (GhostInRange != -1)
+            if (!GhostCaptured && GhostInRange != -1)
             {
                 return true;
             }
@@ -64,6 +62,11 @@
         public bool IsHoldingAGhost()
         {
             return GhostCaptured;
+        }
+
+        public void Debug()
+        {
+            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString());
         }
     }
 }
