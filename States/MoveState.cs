@@ -50,9 +50,6 @@ namespace CodeBuster
                 {
                     buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
                 }
-
-                // buster.TargetPosition = new Vector2(8000, 4500);
-                // buster.TargetPosition = new Vector2(4000, 2250);
             }
 
             // Go to the target position

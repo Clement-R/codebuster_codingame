@@ -24,6 +24,7 @@ namespace CodeBuster
             Brain brain = new Brain(bustersPerPlayer, ghostCount, myTeamId);
 
             // Initialize game infos
+            /*
             if (myTeamId == 0)
             {
                 basePosition = new Vector2(0, 0);
@@ -32,30 +33,18 @@ namespace CodeBuster
             {
                 basePosition = new Vector2(16000, 9000);
             }
+            */
 
             // Initialize FSM
             InitializeFSM();
 
-            // Initialize game infos
-            if (myTeamId == 0)
-            {
-                basePosition = new Vector2(0, 0);
-            }
-            else
-            {
-                basePosition = new Vector2(16000, 9000);
-            }
-
             // game loop
             while (true)
             {
-                int entities = int.Parse(Console.ReadLine()); // the number of busters and ghosts visible to you
+                int entities = int.Parse(Console.ReadLine());
 
                 // Reset ghost in range
-                foreach (Entity ghost in ghosts)
-                {
-                    ghost.IsVisible = false;
-                }
+                brain.ResetTurnInformations();
 
                 for (int i = 0; i < entities; i++)
                 {
@@ -76,29 +65,6 @@ namespace CodeBuster
                         }
                     }
 
-                    if (!_teamInitialized)
-                    {
-                        if (entityType == myTeamId)
-                        {
-                            busters.Add(new Buster(entityId, new Vector2(x, y), basePosition));
-                        }
-                    }
-                    
-                    // If the current entity is a ghost
-                    if (entityType == -1)
-                    {
-                        int foundId = ghosts.FindIndex(e => e.EntityId == entityId);
-                        if(foundId == -1)
-                        {
-                            ghosts.Add(new Ghost(new Vector2(x, y), entityId));
-                        }
-                        else
-                        {
-                            ghosts[foundId].Position = new Vector2(x, y);
-                            ghosts[foundId].IsVisible = true;
-                        }
-                    }
-
                     // If the current entity is a ghost
                     if (entityType == -1)
                     {
@@ -106,24 +72,9 @@ namespace CodeBuster
                     }
 
                     // Update busters informations
-                    if (entityType == myTeamId)
+                    if(entityType == brain.TeamId)
                     {
-                        Buster buster = busters.Find(e => e.EntityId == entityId);
-                        // Check if our buster is holding a ghost and update this information
-                        if (value != -1)
-                        {
-                            buster.GhostCaptured = true;
-                            ghosts.Find(e => e.EntityId == value).Captured = true;
-                            // TODO : Mark this ghost as captured so we can't capture it again
-                        }
-                        else
-                        {
-                            buster.GhostCaptured = false;
-                            buster.GhostInRange = -1;
-                        }
-
-                        // Update its position
-                        buster.Position = new Vector2(x, y);
+                        brain.UpdateBusterInformations(entityId, new Vector2(x, y), value);
                     }
                 }
 
@@ -137,18 +88,17 @@ namespace CodeBuster
                 /* CAPTURE TIME ! */
                 // buster id, ghost id, distance between them
                 List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
-
                 // Foreach known ghost get distance to each buster if in range of capture
-                foreach (Ghost ghost in ghosts.FindAll(e => e.IsVisible == true && e.Captured == false))
+                foreach (Ghost ghost in brain.Ghosts.FindAll(e => e.IsVisible == true && e.Captured == false))
                 {
                     for (int i = 0; i < bustersPerPlayer; i++)
                     {
-                        int distanceToGhost = (int) Vector2.Distance(busters[i].Position, ghost.Position);
+                        int distanceToGhost = (int) Vector2.Distance(brain.Busters[i].Position, ghost.Position);
 
                         // Check if we can capture a ghost
                         if (distanceToGhost > 900 && distanceToGhost < 1760)
                         {
-                            busterToGhost.Add(new Tuple<int, int, int>(busters[i].EntityId, ghost.EntityId, distanceToGhost));
+                            busterToGhost.Add(new Tuple<int, int, int>(brain.Busters[i].EntityId, ghost.EntityId, distanceToGhost));
                         }
                     }
                 }
@@ -158,12 +108,12 @@ namespace CodeBuster
                 {
                     // TODO : This should not be handled by the MAS, this look like agent responsibility
                     // Check if this buster is not busy
-                    if (busters[i].State == BusterState.MoveState && !busters[i].CanCapture())
+                    if (brain.Busters[i].State == BusterState.MoveState && !brain.Busters[i].CanCapture())
                     {
                         int lowest = 9999;
                         int ghostId = -1;
                         // Get the closest ghost
-                        foreach (var item in busterToGhost.FindAll(e => e.Item1 == busters[i].EntityId))
+                        foreach (var item in busterToGhost.FindAll(e => e.Item1 == brain.Busters[i].EntityId))
                         {
                             if(item.Item3 < lowest)
                             {
@@ -171,7 +121,7 @@ namespace CodeBuster
                                 lowest = item.Item3;
                             }
                         }
-                        busters[i].GhostInRange = ghostId;
+                        brain.Busters[i].GhostInRange = ghostId;
 
                         // If no ghost can be captured we want to chase the known ghosts
                         if(ghostId == -1)
@@ -179,9 +129,9 @@ namespace CodeBuster
                             Vector2 nextPos = new Vector2(0, 0);
 
                             float smallest = 999999;
-                            foreach (Entity ghost in ghosts.FindAll(e => e.Captured == false))
+                            foreach (Entity ghost in brain.Ghosts.FindAll(e => e.Captured == false))
                             {
-                                float dist = Vector2.Distance(busters[i].Position, ghost.Position);
+                                float dist = Vector2.Distance(brain.Busters[i].Position, ghost.Position);
                                 if(dist < smallest)
                                 {
                                     nextPos = ghost.Position;
@@ -191,7 +141,7 @@ namespace CodeBuster
 
                             if (nextPos != new Vector2(0, 0))
                             {
-                                busters[i].TargetPosition = nextPos;
+                                brain.Busters[i].TargetPosition = nextPos;
                             }
                         }
                     }
@@ -202,19 +152,19 @@ namespace CodeBuster
                 // Check for each buster if they are in base range
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
-                    if (Vector2.Distance(busters[i].Position, basePosition) <= 1600)
+                    if (Vector2.Distance(brain.Busters[i].Position, brain.BasePosition) <= 1600)
                     {
                         print("Is in drop zone");
-                        busters[i].IsInDropZone = true;
+                        brain.Busters[i].IsInDropZone = true;
                     }
                     else
                     {
-                        busters[i].IsInDropZone = false;
+                        brain.Busters[i].IsInDropZone = false;
                     }
 
-                    busters[i].Debug();
-                    busters[i].ComputeInformations();
-                    Console.WriteLine(busters[i].ComputeNextOrder());
+                    brain.Busters[i].Debug();
+                    brain.Busters[i].ComputeInformations();
+                    Console.WriteLine(brain.Busters[i].ComputeNextOrder());
                 }
             }
         }

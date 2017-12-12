@@ -9,7 +9,6 @@ A penser :
 
 Optimiser drop fantôme : le faire au plus loin possible de la base (rayon 1600)
 
-
 Choix prochaine destination :
 	° Si aucun fantôme en vue, aller aux derniers emplacements connus des fantômes non-capturés (garder en mémoire les fantômes capturés)
 	° Si il n'y a pas de fantôme à cet endroit : TODO
@@ -31,10 +30,11 @@ Stratégies équipe :
 			. Opti : garder une distance entre les 2 pour couvrir plus de distance
 		- Découverte rapide de la carte
 
-// TODO : opti - space separation : voronoi, quadtree
 // TODO : change strat if we have an even or an odd number of busters
 
+TODO :
+	- Intégrer stun
+	- Ajouter découverte de la carte (map séparée en carrés et exploration suivant quand la case a été explorée la dernière fois)
 
 BUGS :
-	- Ne pas aller dans la base après drop
 	- Drop au plus loin possible
