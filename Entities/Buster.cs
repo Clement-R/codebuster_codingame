@@ -14,7 +14,7 @@ namespace CodeBuster
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
 
-        public Buster(Vector2 initialPosition, int entityId, Vector2 basePosition)
+        public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
         {
             Position = initialPosition;
             EntityId = entityId;

@@ -41,6 +41,7 @@
     <Compile Include="Entities\Buster.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Ghost.cs" />
+    <Compile Include="MAS\Brain.cs" />
     <Compile Include="MAS\Player.cs" />
     <Compile Include="States\CaptureState.cs" />
     <Compile Include="States\BusterState.cs" />

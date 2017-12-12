@@ -19,6 +19,19 @@ namespace CodeBuster
             List<Buster> busters = new List<Buster>();
             List<Ghost> ghosts = new List<Ghost>();
             Vector2 basePosition;
+            
+            // Initialize multi-agent system
+            Brain brain = new Brain(bustersPerPlayer, ghostCount, myTeamId);
+
+            // Initialize game infos
+            if (myTeamId == 0)
+            {
+                basePosition = new Vector2(0, 0);
+            }
+            else
+            {
+                basePosition = new Vector2(16000, 9000);
+            }
 
             // Initialize FSM
             InitializeFSM();
@@ -55,11 +68,19 @@ namespace CodeBuster
                     int value = int.Parse(inputs[5]); // For busters: Ghost id being carried. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
+                    if(!brain.TeamInitialized)
+                    {
+                        if (entityType == brain.TeamId)
+                        {
+                            brain.AddBuster(entityId, new Vector2(x, y));
+                        }
+                    }
+
                     if (!_teamInitialized)
                     {
                         if (entityType == myTeamId)
                         {
-                            busters.Add(new Buster(new Vector2(x, y), entityId, basePosition));
+                            busters.Add(new Buster(entityId, new Vector2(x, y), basePosition));
                         }
                     }
                     
@@ -77,7 +98,13 @@ namespace CodeBuster
                             ghosts[foundId].IsVisible = true;
                         }
                     }
-                    
+
+                    // If the current entity is a ghost
+                    if (entityType == -1)
+                    {
+                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true);
+                    }
+
                     // Update busters informations
                     if (entityType == myTeamId)
                     {
