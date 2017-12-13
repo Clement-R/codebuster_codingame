@@ -12,33 +12,17 @@ namespace CodeBuster
     {
         static void Main(string[] args)
         {
-            bool _teamInitialized = false;
             int bustersPerPlayer = int.Parse(Console.ReadLine()); // the amount of busters you control
             int ghostCount = int.Parse(Console.ReadLine()); // the amount of ghosts on the map
             int myTeamId = int.Parse(Console.ReadLine()); // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
-            List<Buster> busters = new List<Buster>();
-            List<Ghost> ghosts = new List<Ghost>();
-            Vector2 basePosition;
             
             // Initialize multi-agent system
             Brain brain = new Brain(bustersPerPlayer, ghostCount, myTeamId);
 
-            // Initialize game infos
-            /*
-            if (myTeamId == 0)
-            {
-                basePosition = new Vector2(0, 0);
-            }
-            else
-            {
-                basePosition = new Vector2(16000, 9000);
-            }
-            */
-
             // Initialize FSM
             InitializeFSM();
 
-            // game loop
+            // Game loop
             while (true)
             {
                 int entities = int.Parse(Console.ReadLine());
@@ -78,94 +62,13 @@ namespace CodeBuster
                     }
                 }
 
-                if (!_teamInitialized)
+                if (!brain.TeamInitialized)
                 {
-                    _teamInitialized = true;
+                    brain.TeamInitialized = true;
                 }
 
-                // TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
-                
-                /* CAPTURE TIME ! */
-                // buster id, ghost id, distance between them
-                List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
-                // Foreach known ghost get distance to each buster if in range of capture
-                foreach (Ghost ghost in brain.Ghosts.FindAll(e => e.IsVisible == true && e.Captured == false))
-                {
-                    for (int i = 0; i < bustersPerPlayer; i++)
-                    {
-                        int distanceToGhost = (int) Vector2.Distance(brain.Busters[i].Position, ghost.Position);
-
-                        // Check if we can capture a ghost
-                        if (distanceToGhost > 900 && distanceToGhost < 1760)
-                        {
-                            busterToGhost.Add(new Tuple<int, int, int>(brain.Busters[i].EntityId, ghost.EntityId, distanceToGhost));
-                        }
-                    }
-                }
-
-                // Get closest ghost
-                for (int i = 0; i < bustersPerPlayer; i++)
-                {
-                    // TODO : This should not be handled by the MAS, this look like agent responsibility
-                    // Check if this buster is not busy
-                    if (brain.Busters[i].State == BusterState.MoveState && !brain.Busters[i].CanCapture())
-                    {
-                        int lowest = 9999;
-                        int ghostId = -1;
-                        // Get the closest ghost
-                        foreach (var item in busterToGhost.FindAll(e => e.Item1 == brain.Busters[i].EntityId))
-                        {
-                            if(item.Item3 < lowest)
-                            {
-                                ghostId = item.Item2;
-                                lowest = item.Item3;
-                            }
-                        }
-                        brain.Busters[i].GhostInRange = ghostId;
-
-                        // If no ghost can be captured we want to chase the known ghosts
-                        if(ghostId == -1)
-                        {
-                            Vector2 nextPos = new Vector2(0, 0);
-
-                            float smallest = 999999;
-                            foreach (Entity ghost in brain.Ghosts.FindAll(e => e.Captured == false))
-                            {
-                                float dist = Vector2.Distance(brain.Busters[i].Position, ghost.Position);
-                                if(dist < smallest)
-                                {
-                                    nextPos = ghost.Position;
-                                    smallest = dist;
-                                }
-                            }
-
-                            if (nextPos != new Vector2(0, 0))
-                            {
-                                brain.Busters[i].TargetPosition = nextPos;
-                            }
-                        }
-                    }
-                }
-
-                // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
-
-                // Check for each buster if they are in base range
-                for (int i = 0; i < bustersPerPlayer; i++)
-                {
-                    if (Vector2.Distance(brain.Busters[i].Position, brain.BasePosition) <= 1600)
-                    {
-                        print("Is in drop zone");
-                        brain.Busters[i].IsInDropZone = true;
-                    }
-                    else
-                    {
-                        brain.Busters[i].IsInDropZone = false;
-                    }
-
-                    brain.Busters[i].Debug();
-                    brain.Busters[i].ComputeInformations();
-                    Console.WriteLine(brain.Busters[i].ComputeNextOrder());
-                }
+                brain.ComputeInformations();
+                brain.GiveOrders();
             }
         }
 
