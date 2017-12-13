@@ -58,7 +58,7 @@ namespace CodeBuster
                     else if (entityType == brain.TeamId)
                     {
                         // Update busters informations
-                        brain.UpdateBusterInformations(entityId, new Vector2(x, y), value);
+                        brain.UpdateBusterInformations(entityId, new Vector2(x, y), value, state);
                     }
                     else
                     {

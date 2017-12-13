@@ -45,8 +45,6 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
-
-            Player.print(GetGridPosition(new Vector2(7555f, 0f)).ToString());
         }
 
         public void Debug()
@@ -65,7 +63,7 @@ namespace CodeBuster
             return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
         }
 
-        public void GetClosestUnexploredCell(Vector2 position)
+        public Vector2 GetOldestUnexploredPosition()
         {
             // Search the cell with the lowest LastTurnExplored
             int oldestCellValue = 999;
@@ -79,14 +77,22 @@ namespace CodeBuster
                 }
             }
 
-            Vector2 gridPosition = GetGridPosition(position);
+            Vector2 gridPosition = GetGridPosition(oldestCell.Position);
+
             // TODO : Foreach cells get their position and calculate distance
-            Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
+            // Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
+
+            return GridToWorldPosition(gridPosition);
         }
 
-        public void CellToWorldPosition()
+        public Vector2 GridToWorldPosition(Vector2 gridPosition)
         {
-            // TODO : to implement
+            Vector2 worldPosition = new Vector2();
+
+            worldPosition.X = FirstColumnPosition + (gridPosition.Y * DistanceBetweenColumns);
+            worldPosition.Y = FirstRowPosition + (gridPosition.X * DistanceBetweenRows);
+
+            return worldPosition;
         }
     }
 }

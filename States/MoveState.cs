@@ -29,6 +29,7 @@ namespace CodeBuster
             }
             
             // TODO : Remove the random movement !
+            /*
             if(buster.Position == buster.TargetPosition)
             {
                 buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
@@ -50,6 +51,7 @@ namespace CodeBuster
                     buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
                 }
             }
+            */
 
             // Go to the target position
             return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;

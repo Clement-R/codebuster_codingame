@@ -217,8 +217,6 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
-
-            Player.print(GetGridPosition(new Vector2(7555f, 0f)).ToString());
         }
 
         public void Debug()
@@ -237,7 +235,7 @@ namespace CodeBuster
             return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
         }
 
-        public void GetClosestUnexploredCell(Vector2 position)
+        public Vector2 GetOldestUnexploredPosition()
         {
             // Search the cell with the lowest LastTurnExplored
             int oldestCellValue = 999;
@@ -251,14 +249,22 @@ namespace CodeBuster
                 }
             }
 
-            Vector2 gridPosition = GetGridPosition(position);
+            Vector2 gridPosition = GetGridPosition(oldestCell.Position);
+
             // TODO : Foreach cells get their position and calculate distance
-            Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
+            // Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
+
+            return GridToWorldPosition(gridPosition);
         }
 
-        public void CellToWorldPosition()
+        public Vector2 GridToWorldPosition(Vector2 gridPosition)
         {
-            // TODO : to implement
+            Vector2 worldPosition = new Vector2();
+
+            worldPosition.X = FirstColumnPosition + (gridPosition.Y * DistanceBetweenColumns);
+            worldPosition.Y = FirstRowPosition + (gridPosition.X * DistanceBetweenRows);
+
+            return worldPosition;
         }
     }
 }
@@ -390,10 +396,28 @@ namespace CodeBuster
         /// capturedGhost : id of the captured ghost, else -1
         /// TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
         /// </summary>
-        public void UpdateBusterInformations(int entityId, Vector2 position, int capturedGhost)
+        public void UpdateBusterInformations(int entityId, Vector2 position, int capturedGhost, int value)
         {
             // Find the buster
             Buster buster = Busters.Find(e => e.EntityId == entityId);
+            
+            // We got stunned
+            if(value == 2)
+            {
+                // Reset capture variables
+                buster.GhostCaptured = false;
+                buster.GhostInRange = -1;
+
+                // If we were carrying a ghost and we drop it outside of the base we mark it as catchable
+                if(!buster.IsInDropZone && capturedGhost != -1)
+                {
+                    Ghost ghost = Ghosts.Find(e => e.EntityId == capturedGhost);
+                    if (ghost != null)
+                    {
+                        ghost.Captured = false;
+                    }
+                }
+            }
 
             // Update its ghost captured value
             if (capturedGhost != -1)
@@ -428,7 +452,7 @@ namespace CodeBuster
         /// </summary>
         public void ResetTurnInformations()
         {
-            foreach (Entity ghost in Ghosts)
+            foreach (Ghost ghost in Ghosts)
             {
                 ghost.IsVisible = false;
             }
@@ -452,6 +476,11 @@ namespace CodeBuster
 
                 buster.EnemyInRange = -1;
                 buster.GhostInRange = -1;
+            }
+
+            foreach (Enemy enemy in Enemies)
+            {
+                enemy.IsVisible = false;
             }
 
             Turn++;
@@ -532,6 +561,10 @@ namespace CodeBuster
                         {
                             Busters[i].TargetPosition = nextPos;
                         }
+                        else
+                        {
+                            Busters[i].TargetPosition = GridMap.GetOldestUnexploredPosition();
+                        }
                     }
                 }
 
@@ -547,9 +580,7 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
-                
                 // TODO : set EnemyPosition of the buster
-
                 float lowestDistance = 99999f;
                 int closestEntity = -1;
                 foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
@@ -566,7 +597,7 @@ namespace CodeBuster
                 }
                 Busters[i].EnemyInRange = closestEntity;
 
-                // TODO : if an enemy is visible and he's carrying a ghost : ATTACK HIM !
+                // If an enemy is visible and he's carrying a ghost : ATTACK HIM !
                 lowestDistance = 99999f;
                 foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.IsCarryingAGhost == true))
                 {
@@ -646,7 +677,7 @@ namespace CodeBuster
                     else if (entityType == brain.TeamId)
                     {
                         // Update busters informations
-                        brain.UpdateBusterInformations(entityId, new Vector2(x, y), value);
+                        brain.UpdateBusterInformations(entityId, new Vector2(x, y), value, state);
                     }
                     else
                     {
@@ -777,6 +808,7 @@ namespace CodeBuster
             }
             
             // TODO : Remove the random movement !
+            /*
             if(buster.Position == buster.TargetPosition)
             {
                 buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
@@ -798,6 +830,7 @@ namespace CodeBuster
                     buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
                 }
             }
+            */
 
             // Go to the target position
             return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;

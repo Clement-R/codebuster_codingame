@@ -131,10 +131,28 @@ namespace CodeBuster
         /// capturedGhost : id of the captured ghost, else -1
         /// TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
         /// </summary>
-        public void UpdateBusterInformations(int entityId, Vector2 position, int capturedGhost)
+        public void UpdateBusterInformations(int entityId, Vector2 position, int capturedGhost, int value)
         {
             // Find the buster
             Buster buster = Busters.Find(e => e.EntityId == entityId);
+            
+            // We got stunned
+            if(value == 2)
+            {
+                // Reset capture variables
+                buster.GhostCaptured = false;
+                buster.GhostInRange = -1;
+
+                // If we were carrying a ghost and we drop it outside of the base we mark it as catchable
+                if(!buster.IsInDropZone && capturedGhost != -1)
+                {
+                    Ghost ghost = Ghosts.Find(e => e.EntityId == capturedGhost);
+                    if (ghost != null)
+                    {
+                        ghost.Captured = false;
+                    }
+                }
+            }
 
             // Update its ghost captured value
             if (capturedGhost != -1)
@@ -169,7 +187,7 @@ namespace CodeBuster
         /// </summary>
         public void ResetTurnInformations()
         {
-            foreach (Entity ghost in Ghosts)
+            foreach (Ghost ghost in Ghosts)
             {
                 ghost.IsVisible = false;
             }
@@ -193,6 +211,11 @@ namespace CodeBuster
 
                 buster.EnemyInRange = -1;
                 buster.GhostInRange = -1;
+            }
+
+            foreach (Enemy enemy in Enemies)
+            {
+                enemy.IsVisible = false;
             }
 
             Turn++;
@@ -273,6 +296,10 @@ namespace CodeBuster
                         {
                             Busters[i].TargetPosition = nextPos;
                         }
+                        else
+                        {
+                            Busters[i].TargetPosition = GridMap.GetOldestUnexploredPosition();
+                        }
                     }
                 }
 
@@ -288,9 +315,7 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
-                
                 // TODO : set EnemyPosition of the buster
-
                 float lowestDistance = 99999f;
                 int closestEntity = -1;
                 foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
@@ -307,7 +332,7 @@ namespace CodeBuster
                 }
                 Busters[i].EnemyInRange = closestEntity;
 
-                // TODO : if an enemy is visible and he's carrying a ghost : ATTACK HIM !
+                // If an enemy is visible and he's carrying a ghost : ATTACK HIM !
                 lowestDistance = 99999f;
                 foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.IsCarryingAGhost == true))
                 {
