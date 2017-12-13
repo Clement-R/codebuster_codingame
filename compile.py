@@ -2,7 +2,15 @@ import os
 import pyperclip
 
 if __name__ == "__main__":
-    os.chdir("E:\_Dev\AI_codebuster")
+    try:
+        os.chdir("E:\_Dev\AI_codebuster")
+    except Exception:
+        print("No file")
+
+    try:
+        os.chdir("C:\AI\codebuster_codingame")
+    except Exception:
+        print("No file")
 
     with open("master.cs", 'w') as code_file:
         content = """
