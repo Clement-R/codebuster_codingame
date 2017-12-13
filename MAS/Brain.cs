@@ -18,6 +18,7 @@ namespace CodeBuster
         public List<Ghost> Ghosts;
         public Vector2 BasePosition;
         public Map GridMap;
+        public int Turn { get; set; }
 
         public Brain(int numberOfBusters, int numberOfGhosts, int teamId)
         {
@@ -138,6 +139,7 @@ namespace CodeBuster
             // Update its ghost captured value
             if (capturedGhost != -1)
             {
+                // Mark this ghost as captured so we can't capture it again
                 buster.GhostCaptured = true;
                 try
                 {
@@ -146,9 +148,10 @@ namespace CodeBuster
                 catch
                 {
                     Player.print("ERROR NULL REF GHOST");
+                    // TODO : handle error case
+                    buster.GhostCaptured = false;
+                    buster.GhostInRange = -1;
                 }
-                
-                // TODO : Mark this ghost as captured so we can't capture it again
             }
             else
             {
@@ -170,6 +173,28 @@ namespace CodeBuster
             {
                 ghost.IsVisible = false;
             }
+
+            foreach (Buster buster in Busters)
+            {
+                // If our last state was Stun and that we've stuned an enemy
+                if(!buster.CanStun && buster.LastState == BusterState.StunState)
+                {
+                    buster.LastTurnStun = Turn;
+                }
+                else if(!buster.CanStun)
+                {
+                    // If last stun was 10 turns before, we can now stun
+                    if(buster.LastTurnStun > Turn + 10)
+                    {
+                        buster.CanStun = true;
+                    }
+                }
+
+                buster.EnemyInRange = -1;
+                buster.GhostInRange = -1;
+            }
+
+            Turn++;
         }
 
         /// <summary>
@@ -260,15 +285,22 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
-                if (Vector2.Distance(Busters[i].Position, BasePosition) <= 1760)
+                float lowestDistance = 99999f;
+                int closestEntity = -1;
+                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
                 {
-                    Player.print("Is in drop zone");
-                    Busters[i].IsInDropZone = true;
+                    float distanceToEnemy = Vector2.Distance(Busters[i].Position, enemy.Position);
+                    if (distanceToEnemy <= 1760)
+                    {
+                        Player.print("Can attack");
+                        if(distanceToEnemy < lowestDistance)
+                        {
+                            lowestDistance = distanceToEnemy;
+                            closestEntity = enemy.EntityId;
+                        }
+                    }
                 }
-                else
-                {
-                    Busters[i].IsInDropZone = false;
-                }
+                Busters[i].EnemyInRange = closestEntity;
             }
         }
 

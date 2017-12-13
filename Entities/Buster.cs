@@ -14,6 +14,8 @@ namespace CodeBuster
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
         public int EnemyInRange { get; set; }
+        public int LastTurnStun { get; set; }
+        public bool CanStun { get; set; }
 
         public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
         {
@@ -36,9 +38,6 @@ namespace CodeBuster
 
         public void ComputeInformations()
         {
-            // TODO : Check if in drop zone
-            // TODO : Check if a ghost is in range
-            // TODO : Check if ghost captured
             Player.print(State.ToString());
             State.ComputeInformations(this);
 
@@ -82,12 +81,12 @@ namespace CodeBuster
 
         public bool CanAttack()
         {
-            if(EnemyInRange == -1)
+            if(EnemyInRange != -1 && CanStun)
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public void Debug()

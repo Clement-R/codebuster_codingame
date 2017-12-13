@@ -44,9 +44,6 @@ namespace CodeBuster
 
         public void ComputeInformations()
         {
-            // TODO : Check if in drop zone
-            // TODO : Check if a ghost is in range
-            // TODO : Check if ghost captured
             Player.print(State.ToString());
             State.ComputeInformations(this);
 
@@ -90,12 +87,12 @@ namespace CodeBuster
 
         public bool CanAttack()
         {
-            if(EnemyInRange == -1)
+            if(EnemyInRange != -1)
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public void Debug()
@@ -158,8 +155,8 @@ namespace CodeBuster
 {
     class Cell
     {
-        Vector2 Position { get; set; }
-        int LastTurnExplored { get; set; }
+        public Vector2 Position { get; set; }
+        public int LastTurnExplored { get; set; }
 
         public Cell(Vector2 position)
         {
@@ -215,6 +212,8 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
+
+            Player.print(GetGridPosition(new Vector2(7555f, 0f)).ToString());
         }
 
         public void Debug()
@@ -228,9 +227,17 @@ namespace CodeBuster
             }
         }
 
-        public void GetClosestUnexploredCell()
+        public Vector2 GetGridPosition(Vector2 position)
         {
-            // TODO : To implement
+            return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
+        }
+
+        public void GetClosestUnexploredCell(Vector2 position)
+        {
+            Vector2 gridPosition = GetGridPosition(position);
+            // TODO : Search the cells with the lowest LastTurnExplored
+            // TODO : Foreach cells get their position and calculate distance
+            Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
         }
     }
 }
@@ -377,6 +384,8 @@ namespace CodeBuster
                 catch
                 {
                     Player.print("ERROR NULL REF GHOST");
+                    buster.GhostCaptured = false;
+                    buster.GhostInRange = -1;
                 }
                 
                 // TODO : Mark this ghost as captured so we can't capture it again
@@ -400,6 +409,12 @@ namespace CodeBuster
             foreach (Entity ghost in Ghosts)
             {
                 ghost.IsVisible = false;
+            }
+
+            foreach (Buster buster in Busters)
+            {
+                buster.EnemyInRange = -1;
+                buster.GhostInRange = -1;
             }
         }
 
@@ -491,15 +506,22 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
-                if (Vector2.Distance(Busters[i].Position, BasePosition) <= 1760)
+                float lowestDistance = 99999f;
+                int closestEntity = -1;
+                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
                 {
-                    Player.print("Is in drop zone");
-                    Busters[i].IsInDropZone = true;
+                    float distanceToEnemy = Vector2.Distance(Busters[i].Position, enemy.Position);
+                    if (distanceToEnemy <= 1760)
+                    {
+                        Player.print("Can attack");
+                        if(distanceToEnemy < lowestDistance)
+                        {
+                            lowestDistance = distanceToEnemy;
+                            closestEntity = enemy.EntityId;
+                        }
+                    }
                 }
-                else
-                {
-                    Busters[i].IsInDropZone = false;
-                }
+                Busters[i].EnemyInRange = closestEntity;
             }
         }
 

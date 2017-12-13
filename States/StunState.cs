@@ -20,6 +20,7 @@ namespace CodeBuster
         public override string Update(Buster buster)
         {
             // STUN id
+            buster.CanStun = false;
             return "STUN " + buster.EnemyInRange.ToString();
         }
 

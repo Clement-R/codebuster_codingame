@@ -9,8 +9,8 @@ namespace CodeBuster
 {
     class Cell
     {
-        Vector2 Position { get; set; }
-        int LastTurnExplored { get; set; }
+        public Vector2 Position { get; set; }
+        public int LastTurnExplored { get; set; }
 
         public Cell(Vector2 position)
         {

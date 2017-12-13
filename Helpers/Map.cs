@@ -45,6 +45,8 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
+
+            Player.print(GetGridPosition(new Vector2(7555f, 0f)).ToString());
         }
 
         public void Debug()
@@ -58,9 +60,17 @@ namespace CodeBuster
             }
         }
 
-        public void GetClosestUnexploredCell()
+        public Vector2 GetGridPosition(Vector2 position)
         {
-            // TODO : To implement
+            return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
+        }
+
+        public void GetClosestUnexploredCell(Vector2 position)
+        {
+            Vector2 gridPosition = GetGridPosition(position);
+            // TODO : Search the cells with the lowest LastTurnExplored
+            // TODO : Foreach cells get their position and calculate distance
+            Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
         }
     }
 }
