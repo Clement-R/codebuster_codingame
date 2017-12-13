@@ -177,14 +177,15 @@ namespace CodeBuster
             foreach (Buster buster in Busters)
             {
                 // If our last state was Stun and that we've stuned an enemy
+                
                 if(!buster.CanStun && buster.LastState == BusterState.StunState)
                 {
                     buster.LastTurnStun = Turn;
                 }
                 else if(!buster.CanStun)
                 {
-                    // If last stun was 10 turns before, we can now stun
-                    if(buster.LastTurnStun > Turn + 10)
+                    // If last stun was 20 turns before, we can now stun
+                    if(buster.LastTurnStun < Turn + 20)
                     {
                         buster.CanStun = true;
                     }
@@ -266,6 +267,8 @@ namespace CodeBuster
                             }
                         }
 
+                        // TODO : Now that our enemies capture a lot of ghosts we must stop derping on a known location, just go and if there is no ghost ask the map for a cell to discover
+
                         if (nextPos != new Vector2(0, 0))
                         {
                             Busters[i].TargetPosition = nextPos;
@@ -285,6 +288,9 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
+                
+                // TODO : set EnemyPosition of the buster
+
                 float lowestDistance = 99999f;
                 int closestEntity = -1;
                 foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
@@ -292,7 +298,6 @@ namespace CodeBuster
                     float distanceToEnemy = Vector2.Distance(Busters[i].Position, enemy.Position);
                     if (distanceToEnemy <= 1760)
                     {
-                        Player.print("Can attack");
                         if(distanceToEnemy < lowestDistance)
                         {
                             lowestDistance = distanceToEnemy;
@@ -301,6 +306,18 @@ namespace CodeBuster
                     }
                 }
                 Busters[i].EnemyInRange = closestEntity;
+
+                // TODO : if an enemy is visible and he's carrying a ghost : ATTACK HIM !
+                lowestDistance = 99999f;
+                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.IsCarryingAGhost == true))
+                {
+                    float distanceToEnemy = Vector2.Distance(Busters[i].Position, enemy.Position);
+                    if (distanceToEnemy < lowestDistance)
+                    {
+                        lowestDistance = distanceToEnemy;
+                        Busters[i].TargetPosition = enemy.Position;
+                    }
+                }
             }
         }
 

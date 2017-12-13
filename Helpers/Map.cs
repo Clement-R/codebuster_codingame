@@ -67,10 +67,26 @@ namespace CodeBuster
 
         public void GetClosestUnexploredCell(Vector2 position)
         {
+            // Search the cell with the lowest LastTurnExplored
+            int oldestCellValue = 999;
+            Cell oldestCell = null;
+            foreach (var cell in cells)
+            {
+                if(cell.LastTurnExplored < oldestCellValue)
+                {
+                    oldestCellValue = cell.LastTurnExplored;
+                    oldestCell = cell;
+                }
+            }
+
             Vector2 gridPosition = GetGridPosition(position);
-            // TODO : Search the cells with the lowest LastTurnExplored
             // TODO : Foreach cells get their position and calculate distance
             Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
+        }
+
+        public void CellToWorldPosition()
+        {
+            // TODO : to implement
         }
     }
 }

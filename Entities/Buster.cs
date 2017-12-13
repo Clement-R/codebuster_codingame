@@ -5,6 +5,8 @@ namespace CodeBuster
     class Buster
     {
         public Vector2 Position { get; set; }
+        public Vector2 GhostPosition { get; set; }
+        public Vector2 EnemyPosition { get; set; }
         public Vector2 TargetPosition { get; set; }
         public Vector2 BasePosition { get; set; }
         public int EntityId { get; }
@@ -91,7 +93,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString());
+            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / last turn stun : " + LastTurnStun.ToString());
         }
     }
 }

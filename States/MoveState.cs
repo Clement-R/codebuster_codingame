@@ -66,14 +66,12 @@ namespace CodeBuster
             // If we've moved to a ghost and we're in range to capture it
             if(buster.CanCapture())
             {
-                Player.print(buster.EntityId + " is going to capture");
                 buster.State = BusterState.CaptureState;
             }
 
             // If we're just scouting and we can attack an enemy
             if (buster.CanAttack() && !buster.GhostCaptured)
             {
-                Player.print("WAHOU");
                 buster.State = BusterState.StunState;
             }
         }
