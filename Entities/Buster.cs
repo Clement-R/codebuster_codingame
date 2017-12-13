@@ -13,6 +13,7 @@ namespace CodeBuster
         public int GhostInRange { get; set; }
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
+        public int EnemyInRange { get; set; }
 
         public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
         {
@@ -24,6 +25,7 @@ namespace CodeBuster
             GhostCaptured = false;
             BasePosition = basePosition;
             GhostInRange = -1;
+            EnemyInRange = -1;
 
             // Initialize MoveToPosition
             TargetPosition = initialPosition;
@@ -78,9 +80,19 @@ namespace CodeBuster
             return GhostCaptured;
         }
 
+        public bool CanAttack()
+        {
+            if(EnemyInRange == -1)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public void Debug()
         {
-            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString());
+            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString());
         }
     }
 }

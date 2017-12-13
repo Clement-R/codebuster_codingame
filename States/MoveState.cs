@@ -17,7 +17,6 @@ namespace CodeBuster
         public override void Enter(Buster buster)
         {
             // TODO : Change this value
-            Player.print("ENTER STATE CALLED");
             buster.TargetPosition = new Vector2(8000, 4500);
         }
 
@@ -69,6 +68,13 @@ namespace CodeBuster
             {
                 Player.print(buster.EntityId + " is going to capture");
                 buster.State = BusterState.CaptureState;
+            }
+
+            // If we're just scouting and we can attack an enemy
+            if (buster.CanAttack() && !buster.GhostCaptured)
+            {
+                Player.print("WAHOU");
+                buster.State = BusterState.StunState;
             }
         }
     }

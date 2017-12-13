@@ -37,8 +37,8 @@ namespace CodeBuster
                     int x = int.Parse(inputs[1]);
                     int y = int.Parse(inputs[2]); // position of this buster / ghost
                     int entityType = int.Parse(inputs[3]); // the team id if it is a buster, -1 if it is a ghost.
-                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost.
-                    int value = int.Parse(inputs[5]); // For busters: Ghost id being carried. For ghosts: number of busters attempting to trap this ghost.
+                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster.
+                    int value = int.Parse(inputs[5]); // For busters: Ghost id being carried, number of turns before stun goes away. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
                     if(!brain.TeamInitialized)
@@ -49,16 +49,21 @@ namespace CodeBuster
                         }
                     }
 
-                    // If the current entity is a ghost
+                    
                     if (entityType == -1)
                     {
+                        // If the current entity is a ghost
                         brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true);
                     }
-
-                    // Update busters informations
-                    if(entityType == brain.TeamId)
+                    else if (entityType == brain.TeamId)
                     {
+                        // Update busters informations
                         brain.UpdateBusterInformations(entityId, new Vector2(x, y), value);
+                    }
+                    else
+                    {
+                        // It's an enemy
+                        brain.CreateOrUpdateEnemy(entityId, new Vector2(x, y), true, state, value);
                     }
                 }
 
@@ -80,6 +85,7 @@ namespace CodeBuster
         public static void InitializeFSM()
         {
             // Initialize FSM
+            // TODO : Introspection ?
             if (BusterState.MoveState == null)
             {
                 BusterState.MoveState = new MoveState();
@@ -93,6 +99,11 @@ namespace CodeBuster
             if (BusterState.ReleaseState == null)
             {
                 BusterState.ReleaseState = new ReleaseState();
+            }
+
+            if (BusterState.StunState == null)
+            {
+                BusterState.StunState = new StunState();
             }
         }
     }

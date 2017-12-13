@@ -21,6 +21,7 @@ namespace CodeBuster
         public int GhostInRange { get; set; }
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
+        public int EnemyInRange { get; set; }
 
         public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
         {
@@ -32,6 +33,7 @@ namespace CodeBuster
             GhostCaptured = false;
             BasePosition = basePosition;
             GhostInRange = -1;
+            EnemyInRange = -1;
 
             // Initialize MoveToPosition
             TargetPosition = initialPosition;
@@ -86,12 +88,40 @@ namespace CodeBuster
             return GhostCaptured;
         }
 
+        public bool CanAttack()
+        {
+            if(EnemyInRange == -1)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public void Debug()
         {
-            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString());
+            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString());
         }
     }
 }
+
+namespace CodeBuster
+{
+    class Enemy : Entity
+    {
+        public int RemainingStunTurns { get; set; }
+        public bool IsCarryingAGhost { get; set; }
+        public bool IsCapturing { get; set; }
+
+        public Enemy(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
+        {
+            RemainingStunTurns = -1;
+            IsCarryingAGhost = false;
+            IsCapturing = false;
+        }
+    }
+}
+
 
 namespace CodeBuster
 {
@@ -215,6 +245,7 @@ namespace CodeBuster
         public bool TeamInitialized { get; set; }
         public int TeamId { get; set; }
         public List<Buster> Busters ;
+        public List<Enemy> Enemies;
         public List<Ghost> Ghosts;
         public Vector2 BasePosition;
         public Map GridMap;
@@ -224,6 +255,7 @@ namespace CodeBuster
             TeamInitialized = false;
             Busters = new List<Buster>();
             Ghosts = new List<Ghost>();
+            Enemies = new List<Enemy>();
             TeamId = teamId;
 
             // Initialize map
@@ -238,8 +270,6 @@ namespace CodeBuster
             {
                 BasePosition = new Vector2(16000, 9000);
             }
-
-            GridMap.Debug();
         }
 
         public void AddBuster(int entityId, Vector2 position)
@@ -269,6 +299,60 @@ namespace CodeBuster
             {
                 ghost.Position = position;
                 ghost.IsVisible = isVisible;
+            }
+        }
+
+        public void AddEnemy(int entityId, Vector2 position)
+        {
+            Enemies.Add(new Enemy(position, entityId));
+        }
+
+        public Enemy GetEnemy(int entityId)
+        {
+            return Enemies.Find(e => e.EntityId == entityId);
+        }
+
+        public void CreateOrUpdateEnemy(int entityId, Vector2 position, bool isVisible, int state, int value)
+        {
+            // Compute informations
+            int remainingStunTurns = -1;
+            bool isCarryingAGhost = false;
+            bool isCapturing = false;
+
+            // State: 0=idle, 1=carrying a ghost, 2=stuned buster
+            // Value: Ghost id being carried, number of turns before stun goes away
+            switch (state)
+            {
+                case 1:
+                    // carrying
+                    isCarryingAGhost = true;
+                    break;
+                case 2:
+                    // stun
+                    remainingStunTurns = value;
+                    break;
+            }
+            
+            // Search the enemy
+            Enemy enemy = GetEnemy(entityId);
+            if (enemy == null)
+            {
+                // Create the enemy and get the created object
+                AddEnemy(entityId, position);
+                enemy = GetEnemy(entityId);
+                // Update its informations
+                enemy.RemainingStunTurns = remainingStunTurns;
+                enemy.IsCarryingAGhost = isCarryingAGhost;
+                enemy.IsCapturing = isCapturing;
+            }
+            else
+            {
+                // Update its informations
+                enemy.Position = position;
+                enemy.IsVisible = isVisible;
+                enemy.RemainingStunTurns = remainingStunTurns;
+                enemy.IsCarryingAGhost = isCarryingAGhost;
+                enemy.IsCapturing = isCapturing;
             }
         }
 
@@ -319,6 +403,10 @@ namespace CodeBuster
             }
         }
 
+        /// <summary>
+        /// Compute the distance between each ghosts and each busters
+        /// </summary>
+        /// <returns></returns>
         public List<Tuple<int, int, int>> ComputeDistancesBetweenEachBusterAndGhosts()
         {
             // buster id, ghost id, distance between them
@@ -341,16 +429,18 @@ namespace CodeBuster
             return busterToGhost;
         }
 
+        /// <summary>
+        /// Given all the game informations we update our Busters if last intels
+        /// </summary>
         public void ComputeInformations()
         {
             List<Tuple<int, int, int>> busterToGhost = ComputeDistancesBetweenEachBusterAndGhosts();
 
             /// TODO : need to move this into giveinformations
+            /// // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
             for (int i = 0; i < Busters.Count; i++)
             {
-                // TODO : This should not be handled by the MAS, this look like agent responsibility
-                // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
-                // Check if this buster is not busy
+                // Check if this buster is not busy // TODO : This should not be handled by the MAS, this look like agent responsibility
                 if (Busters[i].State == BusterState.MoveState && !Busters[i].CanCapture())
                 {
                     int lowest = 9999;
@@ -391,6 +481,17 @@ namespace CodeBuster
 
                 // Check for each buster if they are in base range
                 if (Vector2.Distance(Busters[i].Position, BasePosition) <= 1600)
+                {
+                    Player.print("Is in drop zone");
+                    Busters[i].IsInDropZone = true;
+                }
+                else
+                {
+                    Busters[i].IsInDropZone = false;
+                }
+
+                // Check for each enemy if we are in range to stun one
+                if (Vector2.Distance(Busters[i].Position, BasePosition) <= 1760)
                 {
                     Player.print("Is in drop zone");
                     Busters[i].IsInDropZone = true;
@@ -447,8 +548,8 @@ namespace CodeBuster
                     int x = int.Parse(inputs[1]);
                     int y = int.Parse(inputs[2]); // position of this buster / ghost
                     int entityType = int.Parse(inputs[3]); // the team id if it is a buster, -1 if it is a ghost.
-                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost.
-                    int value = int.Parse(inputs[5]); // For busters: Ghost id being carried. For ghosts: number of busters attempting to trap this ghost.
+                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster.
+                    int value = int.Parse(inputs[5]); // For busters: Ghost id being carried, number of turns before stun goes away. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
                     if(!brain.TeamInitialized)
@@ -459,16 +560,21 @@ namespace CodeBuster
                         }
                     }
 
-                    // If the current entity is a ghost
+                    
                     if (entityType == -1)
                     {
+                        // If the current entity is a ghost
                         brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true);
                     }
-
-                    // Update busters informations
-                    if(entityType == brain.TeamId)
+                    else if (entityType == brain.TeamId)
                     {
+                        // Update busters informations
                         brain.UpdateBusterInformations(entityId, new Vector2(x, y), value);
+                    }
+                    else
+                    {
+                        // It's an enemy
+                        brain.CreateOrUpdateEnemy(entityId, new Vector2(x, y), true, state, value);
                     }
                 }
 
@@ -490,6 +596,7 @@ namespace CodeBuster
         public static void InitializeFSM()
         {
             // Initialize FSM
+            // TODO : Introspection ?
             if (BusterState.MoveState == null)
             {
                 BusterState.MoveState = new MoveState();
@@ -504,6 +611,11 @@ namespace CodeBuster
             {
                 BusterState.ReleaseState = new ReleaseState();
             }
+
+            if (BusterState.StunState == null)
+            {
+                BusterState.StunState = new StunState();
+            }
         }
     }
 }
@@ -514,6 +626,7 @@ namespace CodeBuster
         public static MoveState MoveState { get; set; }
         public static CaptureState CaptureState { get; set; }
         public static ReleaseState ReleaseState { get; set; }
+        public static StunState StunState { get; set; }
 
         public virtual string Update(Buster buster) { return ""; }
         public virtual void ComputeInformations(Buster buster) { }
@@ -575,7 +688,6 @@ namespace CodeBuster
         public override void Enter(Buster buster)
         {
             // TODO : Change this value
-            Player.print("ENTER STATE CALLED");
             buster.TargetPosition = new Vector2(8000, 4500);
         }
 
@@ -628,6 +740,13 @@ namespace CodeBuster
                 Player.print(buster.EntityId + " is going to capture");
                 buster.State = BusterState.CaptureState;
             }
+
+            // If we're just scouting and we can attack an enemy
+            if (buster.CanAttack() && !buster.GhostCaptured)
+            {
+                Player.print("WAHOU");
+                buster.State = BusterState.StunState;
+            }
         }
     }
 }
@@ -666,3 +785,34 @@ namespace CodeBuster
         }
     }
 }
+
+namespace CodeBuster
+{
+    class StunState : BusterState
+    {
+        public StunState()
+        {
+        }
+
+        public override void Enter(Buster buster)
+        {
+
+        }
+
+        public override string Update(Buster buster)
+        {
+            // STUN id
+            return "STUN " + buster.EnemyInRange.ToString();
+        }
+
+        public override void ComputeInformations(Buster buster)
+        {
+            // If we've just attack an enemy and we've no more enemy to stun go to scout again
+            if (!buster.CanAttack())
+            {
+                buster.State = BusterState.MoveState;
+            }
+        }
+    }
+}
+

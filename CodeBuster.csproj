@@ -39,20 +39,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entities\Buster.cs" />
+    <Compile Include="Entities\Enemy.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Ghost.cs" />
+    <Compile Include="Helpers\Cell.cs" />
+    <Compile Include="Helpers\Map.cs" />
     <Compile Include="MAS\Brain.cs" />
     <Compile Include="MAS\Player.cs" />
     <Compile Include="States\CaptureState.cs" />
     <Compile Include="States\BusterState.cs" />
     <Compile Include="States\MoveState.cs" />
     <Compile Include="States\ReleaseState.cs" />
+    <Compile Include="States\StunState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Numerics" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
