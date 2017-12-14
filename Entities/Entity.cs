@@ -15,5 +15,10 @@ namespace CodeBuster
 
             this.IsVisible = true;
         }
+
+        public void Debug()
+        {
+            Player.print("Position : " + Position.ToString() + " / Id : " + EntityId.ToString() + " / Visible : " + IsVisible);
+        }
     }
 }

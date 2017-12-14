@@ -12,13 +12,19 @@ namespace CodeBuster
         public int RemainingStunTurns { get; set; }
         public bool IsCarryingAGhost { get; set; }
         public bool IsCapturing { get; set; }
-        public bool Marked { get; set; }
+        public bool Targeted { get; set; }
 
         public Enemy(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
         {
             RemainingStunTurns = -1;
             IsCarryingAGhost = false;
             IsCapturing = false;
+        }
+
+        public new void Debug()
+        {
+            base.Debug();
+            Player.print("Remaining stun : " + RemainingStunTurns + " / Capturing : " + IsCapturing + " / Targeted : " + Targeted);
         }
     }
 }

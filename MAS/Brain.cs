@@ -20,6 +20,9 @@ namespace CodeBuster
         public Map GridMap;
         public int Turn { get; set; }
 
+        int x = 0;
+        int y = 0;
+
         public Brain(int numberOfBusters, int numberOfGhosts, int teamId)
         {
             TeamInitialized = false;
@@ -60,6 +63,7 @@ namespace CodeBuster
 
         public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible)
         {
+            Player.print("CREATE OR UPDATE GHOST : " + entityId.ToString());
             Ghost ghost = GetGhost(entityId);
             if (ghost == null)
             {
@@ -69,6 +73,7 @@ namespace CodeBuster
             {
                 ghost.Position = position;
                 ghost.IsVisible = isVisible;
+                ghost.Captured = false;
             }
         }
 
@@ -128,53 +133,51 @@ namespace CodeBuster
 
         /// <summary> UpdateBusterInformations give informations to the buster according to its role
         /// entityId : id of the buster
-        /// capturedGhost : id of the captured ghost, else -1
+        /// value : Ghost id being carried, number of turns before stun goes away
+        /// state : 0=idle, 1=carrying a ghost, 2=stuned buster
         /// TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
         /// </summary>
-        public void UpdateBusterInformations(int entityId, Vector2 position, int capturedGhost, int value)
+        public void UpdateBusterInformations(int entityId, Vector2 position, int value, int state)
         {
             // Find the buster
             Buster buster = Busters.Find(e => e.EntityId == entityId);
             
             // We got stunned
-            if(value == 2)
+            if(state == 2)
             {
-                // Reset capture variables
-                buster.GhostCaptured = false;
-                buster.GhostInRange = -1;
-
                 // If we were carrying a ghost and we drop it outside of the base we mark it as catchable
-                if(!buster.IsInDropZone && capturedGhost != -1)
+                if(!buster.IsInDropZone && buster.GhostCaptured != null)
                 {
-                    Ghost ghost = Ghosts.Find(e => e.EntityId == capturedGhost);
-                    if (ghost != null)
-                    {
-                        ghost.Captured = false;
-                    }
+                    buster.GhostCaptured.Captured = false;
                 }
+
+                // Reset capture variables
+                buster.GhostCaptured = null;
+                buster.GhostInRange = null;
             }
 
             // Update its ghost captured value
-            if (capturedGhost != -1)
+            if (state == 1)
             {
+                Ghost ghost = Ghosts.Find(e => e.EntityId == value);
                 // Mark this ghost as captured so we can't capture it again
-                buster.GhostCaptured = true;
+                buster.GhostCaptured = ghost;
                 try
                 {
-                    Ghosts.Find(e => e.EntityId == capturedGhost).Captured = true;
+                    Ghosts.Find(e => e.EntityId == value).Captured = true;
                 }
                 catch
                 {
                     Player.print("ERROR NULL REF GHOST");
                     // TODO : handle error case
-                    buster.GhostCaptured = false;
-                    buster.GhostInRange = -1;
+                    buster.GhostCaptured = null;
+                    buster.GhostInRange = null;
                 }
             }
             else
             {
-                buster.GhostCaptured = false;
-                buster.GhostInRange = -1;
+                buster.GhostCaptured = null;
+                buster.GhostInRange = null;
             }
 
             // Update its position
@@ -195,7 +198,6 @@ namespace CodeBuster
             foreach (Buster buster in Busters)
             {
                 // If our last state was Stun and that we've stuned an enemy
-                
                 if(!buster.CanStun && buster.LastState == BusterState.StunState)
                 {
                     buster.LastTurnStun = Turn;
@@ -203,19 +205,19 @@ namespace CodeBuster
                 else if(!buster.CanStun)
                 {
                     // If last stun was 20 turns before, we can now stun
-                    if(buster.LastTurnStun < Turn + 20)
+                    if(Turn >= buster.LastTurnStun + 20)
                     {
                         buster.CanStun = true;
                     }
                 }
 
                 buster.EnemyInRange = -1;
-                buster.GhostInRange = -1;
             }
 
             foreach (Enemy enemy in Enemies)
             {
                 enemy.IsVisible = false;
+                enemy.Targeted = false;
             }
 
             Turn++;
@@ -256,37 +258,69 @@ namespace CodeBuster
 
             /// TODO : need to move this into giveinformations
             /// // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
+            /*
+            Vector2 pos = new Vector2(0, 0);
+            if (Busters[0].Position == Busters[0].TargetPosition)
+            {
+
+                pos = GridMap.GridToWorldPosition(new Vector2(x, y));
+
+                // Debug map variables
+                x++;
+                if (x >= GridMap.Columns)
+                {
+                    x = 0;
+                    y++;
+                    if (y >= GridMap.Rows)
+                    {
+                        y = 0;
+                    }
+                }
+            }
+            */
+
             for (int i = 0; i < Busters.Count; i++)
             {
-                // Check if this buster is not busy // TODO : This should not be handled by the MAS, this look like agent responsibility
-                if (Busters[i].State == BusterState.MoveState && !Busters[i].CanCapture())
+                Player.print("Buster : " + i.ToString());
+
+                /*
+                if(pos != new Vector2(0, 0))
                 {
-                    int lowest = 9999;
-                    int ghostId = -1;
+                    Busters[i].TargetPosition = pos;
+                }
+                */
+                
+                // Check if this buster is not busy
+                if (!Busters[i].IsBusy())
+                {
                     // Get the closest ghost
+                    int lowest = 9999;
+                    Ghost ghost = null;
                     foreach (var item in busterToGhost.FindAll(e => e.Item1 == Busters[i].EntityId))
                     {
                         if (item.Item3 < lowest)
                         {
-                            ghostId = item.Item2;
+                            ghost = Ghosts.Find(e => e.EntityId  == item.Item2);
                             lowest = item.Item3;
+                            Player.print("ONE GHOST FOUND IN AREA");
                         }
                     }
-                    Busters[i].GhostInRange = ghostId;
+                    Busters[i].GhostInRange = ghost;
 
                     // If no ghost can be captured we want to chase the known ghosts
-                    if (ghostId == -1)
+                    if (ghost == null)
                     {
                         Vector2 nextPos = new Vector2(0, 0);
-
+                        Ghost targetGhost = null;
                         float smallest = 999999;
-                        foreach (Entity ghost in Ghosts.FindAll(e => e.Captured == false))
+                        foreach (Ghost freeGhost in Ghosts.FindAll(e => e.Captured == false))
                         {
-                            float dist = Vector2.Distance(Busters[i].Position, ghost.Position);
+                            float dist = Vector2.Distance(Busters[i].Position, freeGhost.Position);
                             if (dist < smallest)
                             {
-                                nextPos = ghost.Position;
+                                nextPos = freeGhost.Position;
                                 smallest = dist;
+                                targetGhost = freeGhost;
                             }
                         }
 
@@ -294,15 +328,13 @@ namespace CodeBuster
 
                         if (nextPos != new Vector2(0, 0))
                         {
+                            Player.print("CHASING AN OLD GHOST : " + targetGhost.EntityId.ToString());
                             Busters[i].TargetPosition = nextPos;
                         }
-
-                        // If we are at the wanted position find a new cell to explore
-                        if (Busters[i].Position == Busters[i].TargetPosition)
-                        {
-                            GridMap.SetCellAge(Busters[i].Position, Turn);
-                            Busters[i].TargetPosition = GridMap.GetOldestUnexploredPosition();
-                        }
+                    }
+                    else
+                    {
+                        Busters[i].MarkGhostAsCaptured();
                     }
                 }
 
@@ -318,10 +350,9 @@ namespace CodeBuster
                 }
 
                 // Check for each enemy if we are in range to stun one
-                // TODO : set EnemyPosition of the buster
                 float lowestDistance = 99999f;
                 int closestEntity = -1;
-                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1))
+                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1 && e.Targeted == false))
                 {
                     float distanceToEnemy = Vector2.Distance(Busters[i].Position, enemy.Position);
                     if (distanceToEnemy <= 1760)
@@ -330,6 +361,9 @@ namespace CodeBuster
                         {
                             lowestDistance = distanceToEnemy;
                             closestEntity = enemy.EntityId;
+                            enemy.Targeted = true;
+
+                            Player.print("GOING TO ATTACK");
                         }
                     }
                 }
@@ -344,13 +378,35 @@ namespace CodeBuster
                     {
                         lowestDistance = distanceToEnemy;
                         Busters[i].TargetPosition = enemy.Position;
+                        Player.print("CHASING AN ENEMY : " + enemy.EntityId.ToString());
                     }
                 }
+
+                // If we are at the wanted position find a new cell to explore
+                if (Busters[i].Position == Busters[i].TargetPosition && Busters[i].GhostInRange == null)
+                {
+                    Player.print("SCOUTING");
+                    GridMap.UnlockCell(Busters[i].Position);
+                    GridMap.SetCellAge(Busters[i].Position, Turn);
+                    Busters[i].TargetPosition = GetNextPosition();
+                }
             }
+            // GridMap.Debug();
+        }
+
+        public Vector2 GetNextPosition()
+        {
+            Player.print("X : " + x.ToString() + " - Y : " + y.ToString());
+            // Vector2 nextPosition = GridMap.GridToWorldPosition(new Vector2(x, y));
+            Vector2 nextPosition = GridMap.GetOldestUnexploredPosition();
+            return nextPosition;
         }
 
         public void GiveOrders()
         {
+            Player.print("-------------------------");
+            Debug();
+
             foreach (var buster in Busters)
             {
                 buster.Debug();
@@ -358,6 +414,25 @@ namespace CodeBuster
 
                 Console.WriteLine(buster.ComputeNextOrder());
             }
+
+            GridMap.Draw();
+        }
+
+        public void Debug()
+        {
+            Player.print("-- ENEMIES --");
+            foreach (var enemy in Enemies)
+            {
+                enemy.Debug();
+            }
+
+            Player.print("-- GHOSTS --");
+            foreach (var ghost in Ghosts)
+            {
+                ghost.Debug();
+            }
+
+            Player.print("Turn : " + Turn.ToString());
         }
     }
 }

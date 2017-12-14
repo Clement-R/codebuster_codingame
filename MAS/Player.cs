@@ -48,7 +48,6 @@ namespace CodeBuster
                             brain.AddBuster(entityId, new Vector2(x, y));
                         }
                     }
-
                     
                     if (entityType == -1)
                     {

@@ -9,8 +9,8 @@ namespace CodeBuster
 {
     class Map
     {
-        int Columns = 6;
-        int Rows = 4;
+        public int Columns = 6;
+        public int Rows = 4;
         Cell[,] cells;
 
         int FirstColumnPosition = 1555;
@@ -58,6 +58,19 @@ namespace CodeBuster
             }
         }
 
+        public void Draw()
+        {
+            for (int i = 0; i < Rows; i++)
+            {
+                string row = "";
+                for (int j = 0; j < Columns; j++)
+                {
+                    row += j.ToString() + ":" + i.ToString() + "* " + cells[i, j].LastTurnExplored.ToString() + " |";
+                }
+                Player.print(row);
+            }
+        }
+
         public Vector2 WorldToGridPosition(Vector2 position)
         {
             return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
@@ -70,6 +83,12 @@ namespace CodeBuster
             cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = age;
         }
 
+        public void UnlockCell(Vector2 worldPosition)
+        {
+            Vector2 gridPosition = WorldToGridPosition(worldPosition);
+            cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
+        }
+
         public Vector2 GetOldestUnexploredPosition()
         {
             // Search the cell with the lowest LastTurnExplored
@@ -77,17 +96,18 @@ namespace CodeBuster
             Cell oldestCell = null;
             foreach (var cell in cells)
             {
-                if(cell.LastTurnExplored < oldestCellValue)
+                if(cell.LastTurnExplored < oldestCellValue && !cell.IsLocked)
                 {
                     oldestCellValue = cell.LastTurnExplored;
                     oldestCell = cell;
+                    oldestCell.Debug();
                 }
             }
 
+            oldestCell.IsLocked = true;
             Vector2 gridPosition = WorldToGridPosition(oldestCell.Position);
 
             // TODO : Foreach cells get their position and calculate distance
-            // Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
 
             return GridToWorldPosition(gridPosition);
         }
@@ -96,8 +116,18 @@ namespace CodeBuster
         {
             Vector2 worldPosition = new Vector2();
 
-            worldPosition.X = FirstColumnPosition + (gridPosition.Y * DistanceBetweenColumns);
-            worldPosition.Y = FirstRowPosition + (gridPosition.X * DistanceBetweenRows);
+            worldPosition.Y = FirstColumnPosition + (gridPosition.Y * DistanceBetweenColumns);
+            worldPosition.X = FirstRowPosition + (gridPosition.X * DistanceBetweenRows);
+
+            if(worldPosition.X > 16000)
+            {
+                worldPosition.X = 16000;
+            }
+
+            if(worldPosition.Y > 9000)
+            {
+                worldPosition.Y = 9000;
+            }
 
             return worldPosition;
         }

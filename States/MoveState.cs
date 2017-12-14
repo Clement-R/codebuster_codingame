@@ -8,10 +8,6 @@ namespace CodeBuster
 
         public MoveState()
         {
-            if(rng == null)
-            {
-                rng = new System.Random();
-            }
         }
 
         public override void Enter(Buster buster)
@@ -45,7 +41,7 @@ namespace CodeBuster
             }
 
             // If we're just scouting and we can attack an enemy
-            if (buster.CanAttack() && !buster.GhostCaptured)
+            if (buster.CanAttack() && buster.GhostCaptured == null)
             {
                 buster.State = BusterState.StunState;
             }

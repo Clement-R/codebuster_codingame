@@ -14,11 +14,13 @@ namespace CodeBuster
         // This attribute contain the number of ghost we've seen in this cell
         // by using the symmetry rule of the game we can predict where the next ghosts are
         public int BaseNumberOfGhosts { get; set; }
+        public bool IsLocked;
 
         public Cell(Vector2 position)
         {
             Position = position;
             LastTurnExplored = -1;
+            IsLocked = false;
         }
 
         public void Debug()

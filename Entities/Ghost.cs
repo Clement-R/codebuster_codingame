@@ -9,5 +9,11 @@ namespace CodeBuster
         public Ghost(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
         {
         }
+
+        public new void Debug()
+        {
+            base.Debug();
+            Player.print("Captured : " + Captured);
+        }
     }
 }
