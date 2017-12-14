@@ -101,7 +101,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print("Buster " + EntityId + " : " + "Can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / last turn stun : " + LastTurnStun.ToString());
+            Player.print("Buster " + EntityId + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / last turn stun : " + LastTurnStun.ToString());
         }
     }
 }
@@ -162,6 +162,8 @@ namespace CodeBuster
     {
         public Vector2 Position { get; set; }
         public int LastTurnExplored { get; set; }
+        // This attribute contain the number of ghost we've seen in this cell
+        public int BaseNumberOfGhosts { get; set; }
 
         public Cell(Vector2 position)
         {
@@ -230,9 +232,16 @@ namespace CodeBuster
             }
         }
 
-        public Vector2 GetGridPosition(Vector2 position)
+        public Vector2 WorldToGridPosition(Vector2 position)
         {
             return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
+        }
+
+        public void SetCellAge(Vector2 worldPosition, int age)
+        {
+            Vector2 gridPosition = WorldToGridPosition(worldPosition);
+            Player.print("SET CELL AS : " + age.ToString());
+            cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = age;
         }
 
         public Vector2 GetOldestUnexploredPosition()
@@ -249,7 +258,7 @@ namespace CodeBuster
                 }
             }
 
-            Vector2 gridPosition = GetGridPosition(oldestCell.Position);
+            Vector2 gridPosition = WorldToGridPosition(oldestCell.Position);
 
             // TODO : Foreach cells get their position and calculate distance
             // Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());
@@ -561,8 +570,11 @@ namespace CodeBuster
                         {
                             Busters[i].TargetPosition = nextPos;
                         }
-                        else
+
+                        // If we are at the wanted position find a new cell to explore
+                        if (Busters[i].Position == Busters[i].TargetPosition)
                         {
+                            GridMap.SetCellAge(Busters[i].Position, Turn);
                             Busters[i].TargetPosition = GridMap.GetOldestUnexploredPosition();
                         }
                     }
@@ -795,8 +807,6 @@ namespace CodeBuster
 
         public override void Enter(Buster buster)
         {
-            // TODO : Change this value
-            buster.TargetPosition = new Vector2(8000, 4500);
         }
 
         public override string Update(Buster buster)
@@ -806,31 +816,6 @@ namespace CodeBuster
                 // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
                 buster.TargetPosition = buster.BasePosition;
             }
-            
-            // TODO : Remove the random movement !
-            /*
-            if(buster.Position == buster.TargetPosition)
-            {
-                buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
-                if (buster.TargetPosition.X <= 0)
-                {
-                    buster.TargetPosition = new Vector2(0, buster.TargetPosition.Y);
-                }
-                if (buster.TargetPosition.X >= 16000)
-                {
-                    buster.TargetPosition = new Vector2(16000, buster.TargetPosition.Y);
-                }
-
-                if (buster.TargetPosition.Y <= 0)
-                {
-                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 0);
-                }
-                if (buster.TargetPosition.Y >= 9000)
-                {
-                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
-                }
-            }
-            */
 
             // Go to the target position
             return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;

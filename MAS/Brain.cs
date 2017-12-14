@@ -296,8 +296,11 @@ namespace CodeBuster
                         {
                             Busters[i].TargetPosition = nextPos;
                         }
-                        else
+
+                        // If we are at the wanted position find a new cell to explore
+                        if (Busters[i].Position == Busters[i].TargetPosition)
                         {
+                            GridMap.SetCellAge(Busters[i].Position, Turn);
                             Busters[i].TargetPosition = GridMap.GetOldestUnexploredPosition();
                         }
                     }

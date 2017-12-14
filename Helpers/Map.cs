@@ -58,9 +58,16 @@ namespace CodeBuster
             }
         }
 
-        public Vector2 GetGridPosition(Vector2 position)
+        public Vector2 WorldToGridPosition(Vector2 position)
         {
             return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
+        }
+
+        public void SetCellAge(Vector2 worldPosition, int age)
+        {
+            Vector2 gridPosition = WorldToGridPosition(worldPosition);
+            Player.print("SET CELL AS : " + age.ToString());
+            cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = age;
         }
 
         public Vector2 GetOldestUnexploredPosition()
@@ -77,7 +84,7 @@ namespace CodeBuster
                 }
             }
 
-            Vector2 gridPosition = GetGridPosition(oldestCell.Position);
+            Vector2 gridPosition = WorldToGridPosition(oldestCell.Position);
 
             // TODO : Foreach cells get their position and calculate distance
             // Player.print(cells[(int)gridPosition.X, (int)gridPosition.Y].Position.ToString());

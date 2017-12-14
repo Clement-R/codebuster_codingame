@@ -16,8 +16,6 @@ namespace CodeBuster
 
         public override void Enter(Buster buster)
         {
-            // TODO : Change this value
-            buster.TargetPosition = new Vector2(8000, 4500);
         }
 
         public override string Update(Buster buster)
@@ -27,31 +25,6 @@ namespace CodeBuster
                 // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
                 buster.TargetPosition = buster.BasePosition;
             }
-            
-            // TODO : Remove the random movement !
-            /*
-            if(buster.Position == buster.TargetPosition)
-            {
-                buster.TargetPosition = new Vector2(buster.Position.X + rng.Next(-8000, 8000), buster.Position.X + rng.Next(-3000, 3000));
-                if (buster.TargetPosition.X <= 0)
-                {
-                    buster.TargetPosition = new Vector2(0, buster.TargetPosition.Y);
-                }
-                if (buster.TargetPosition.X >= 16000)
-                {
-                    buster.TargetPosition = new Vector2(16000, buster.TargetPosition.Y);
-                }
-
-                if (buster.TargetPosition.Y <= 0)
-                {
-                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 0);
-                }
-                if (buster.TargetPosition.Y >= 9000)
-                {
-                    buster.TargetPosition = new Vector2(buster.TargetPosition.X, 9000);
-                }
-            }
-            */
 
             // Go to the target position
             return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;

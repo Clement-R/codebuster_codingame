@@ -11,6 +11,9 @@ namespace CodeBuster
     {
         public Vector2 Position { get; set; }
         public int LastTurnExplored { get; set; }
+        // This attribute contain the number of ghost we've seen in this cell
+        // by using the symmetry rule of the game we can predict where the next ghosts are
+        public int BaseNumberOfGhosts { get; set; }
 
         public Cell(Vector2 position)
         {
