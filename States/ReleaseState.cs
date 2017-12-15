@@ -8,12 +8,11 @@
 
         public override void Enter(Buster buster)
         {
-
+            buster.TargetPosition = buster.Position;
         }
 
         public override string Update(Buster buster)
         {
-            buster.TargetPosition = buster.Position;
             return "RELEASE";
         }
 

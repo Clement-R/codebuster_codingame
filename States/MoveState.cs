@@ -12,16 +12,15 @@ namespace CodeBuster
 
         public override void Enter(Buster buster)
         {
-        }
-
-        public override string Update(Buster buster)
-        {
-            if(buster.IsHoldingAGhost())
+            if (buster.IsHoldingAGhost())
             {
                 // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
                 buster.TargetPosition = buster.BasePosition;
             }
+        }
 
+        public override string Update(Buster buster)
+        {
             // Go to the target position
             return "MOVE " + buster.TargetPosition.X + " " + buster.TargetPosition.Y;
         }

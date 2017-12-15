@@ -19,8 +19,9 @@ namespace CodeBuster
 
         public override string Update(Buster buster)
         {
-            // STUN id
             buster.CanStun = false;
+            buster.TargetPosition = buster.Position;
+            // STUN id
             return "STUN " + buster.EnemyInRange.EntityId.ToString();
         }
 

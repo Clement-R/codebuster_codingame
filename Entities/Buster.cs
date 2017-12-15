@@ -11,13 +11,20 @@ namespace CodeBuster
         public Vector2 BasePosition { get; set; }
         public int EntityId { get; }
         public bool IsInDropZone { get; set; }
+        // The ghost that I'm carrying
         public Ghost GhostCaptured { get; set; }
+        // A ghost that I can capture
         public Ghost GhostInRange { get; set; }
+        // The ghost I'm chasing
+        public Ghost GhostChased { get; set; }
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
+        public Enemy EnemyChased { get; set; }
         public Enemy EnemyInRange { get; set; }
         public int LastTurnStun { get; set; }
         public bool CanStun { get; set; }
+        public bool IsScouting { get; set; }
+        public bool IsStunned { get; set; }
 
         public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
         {
@@ -26,10 +33,15 @@ namespace CodeBuster
 
             // Initialize values
             IsInDropZone = false;
+            IsScouting = false;
             GhostCaptured = null;
             BasePosition = basePosition;
             GhostInRange = null;
             EnemyInRange = null;
+            EnemyChased = null;
+            GhostChased = null;
+            CanStun = true;
+            IsStunned = false;
 
             // Initialize MoveToPosition
             TargetPosition = initialPosition;
@@ -40,10 +52,11 @@ namespace CodeBuster
 
         public void ComputeInformations()
         {
-            Player.print(State.ToString());
             State.ComputeInformations(this);
 
-            if(State != LastState)
+            Player.print(State.ToString());
+
+            if (State != LastState)
             {
                 State.Enter(this);
             }
@@ -98,7 +111,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print("Buster " + EntityId + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / last turn stun : " + LastTurnStun.ToString());
+            Player.print("Buster " + EntityId + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / can stun : " + CanStun + " / last turn stun : " + LastTurnStun.ToString() + " / ghost chased : " + ((GhostChased != null) ? GhostChased.EntityId : -1) + " / ghost in range : " + ((GhostInRange != null) ? GhostInRange.EntityId : -1) + " / enemy chased : " + ((EnemyChased != null) ? EnemyChased.EntityId : -1) + " / enemy in range : " + ((EnemyInRange != null) ? EnemyInRange.EntityId : -1));
         }
 
         public void MarkGhostAsCaptured()
@@ -111,7 +124,7 @@ namespace CodeBuster
 
         public bool IsBusy()
         {
-            if(State == BusterState.MoveState && !CanCapture())
+            if(!IsHoldingAGhost() && GhostInRange == null && !IsStunned)
             {
                 return false;
             }

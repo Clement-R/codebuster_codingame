@@ -24,7 +24,7 @@ namespace CodeBuster
         public new void Debug()
         {
             base.Debug();
-            Player.print("Remaining stun : " + RemainingStunTurns + " / Capturing : " + IsCapturing + " / Targeted : " + Targeted);
+            Player.print("Remaining stun : " + RemainingStunTurns + " / Capturing : " + IsCapturing + " / Targeted : " + Targeted + " / Is carrying : " + IsCarryingAGhost);
         }
     }
 }
