@@ -37,7 +37,7 @@ namespace CodeBuster
                     int x = int.Parse(inputs[1]);
                     int y = int.Parse(inputs[2]); // position of this buster / ghost
                     int entityType = int.Parse(inputs[3]); // the team id if it is a buster, -1 if it is a ghost.
-                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster.
+                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster. For ghosts : life.
                     int value = int.Parse(inputs[5]); // For busters: Ghost id being carried, number of turns before stun goes away. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
@@ -52,7 +52,7 @@ namespace CodeBuster
                     if (entityType == -1)
                     {
                         // If the current entity is a ghost
-                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true);
+                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true, state);
                     }
                     else if (entityType == brain.TeamId)
                     {

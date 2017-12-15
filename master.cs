@@ -197,11 +197,13 @@ namespace CodeBuster
         public bool Locked { get; set; }
         public bool Captured { get; set; }
         public bool KnownLocation { get; set; }
+        public int Life { get; set; }
 
-        public Ghost(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
+        public Ghost(Vector2 initialPosition, int entityId, int life) : base(initialPosition, entityId)
         {
             KnownLocation = true;
             Locked = false;
+            Life = life;
         }
 
         public new void Debug()
@@ -471,9 +473,6 @@ namespace CodeBuster
         public Map GridMap;
         public int Turn { get; set; }
 
-        int x = 0;
-        int y = 0;
-
         public Brain(int numberOfBusters, int numberOfGhosts, int teamId)
         {
             TeamInitialized = false;
@@ -503,9 +502,9 @@ namespace CodeBuster
             Busters.Add(new Buster(entityId, position, BasePosition));
         }
 
-        public void AddGhost(int entityId, Vector2 position)
+        public void AddGhost(int entityId, Vector2 position, int life)
         {
-            Ghosts.Add(new Ghost(position, entityId));
+            Ghosts.Add(new Ghost(position, entityId, life));
         }
 
         public Ghost GetGhost(int entityId)
@@ -513,13 +512,13 @@ namespace CodeBuster
             return Ghosts.Find(e => e.EntityId == entityId);
         }
 
-        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible)
+        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible, int life)
         {
             Player.print("CREATE OR UPDATE GHOST : " + entityId.ToString());
             Ghost ghost = GetGhost(entityId);
             if (ghost == null)
             {
-                AddGhost(entityId, position);
+                AddGhost(entityId, position, life);
             }
             else
             {
@@ -527,6 +526,7 @@ namespace CodeBuster
                 ghost.IsVisible = isVisible;
                 ghost.KnownLocation = isVisible;
                 ghost.Captured = false;
+                ghost.Life = life;
             }
         }
 
@@ -1079,7 +1079,7 @@ namespace CodeBuster
 
                 if (buster.EnemyChased == null && buster.GhostChased == null && buster.State == BusterState.MoveState && !buster.IsHoldingAGhost())
                 {
-                    Player.print("Buster " + buster.EntityId + " is scouting " + buster.TargetPosition);
+                    Player.print("Buster " + buster.EntityId + " is scouting " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                     buster.IsScouting = true;
 
                     // I'm scouting, and I'm at my target position, I need a new cell to explore
@@ -1248,7 +1248,7 @@ namespace CodeBuster
                     int x = int.Parse(inputs[1]);
                     int y = int.Parse(inputs[2]); // position of this buster / ghost
                     int entityType = int.Parse(inputs[3]); // the team id if it is a buster, -1 if it is a ghost.
-                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster.
+                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster. For ghosts : life.
                     int value = int.Parse(inputs[5]); // For busters: Ghost id being carried, number of turns before stun goes away. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
@@ -1263,7 +1263,7 @@ namespace CodeBuster
                     if (entityType == -1)
                     {
                         // If the current entity is a ghost
-                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true);
+                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true, state);
                     }
                     else if (entityType == brain.TeamId)
                     {

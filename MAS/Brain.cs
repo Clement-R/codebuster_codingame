@@ -21,9 +21,6 @@ namespace CodeBuster
         public Map GridMap;
         public int Turn { get; set; }
 
-        int x = 0;
-        int y = 0;
-
         public Brain(int numberOfBusters, int numberOfGhosts, int teamId)
         {
             TeamInitialized = false;
@@ -53,9 +50,9 @@ namespace CodeBuster
             Busters.Add(new Buster(entityId, position, BasePosition));
         }
 
-        public void AddGhost(int entityId, Vector2 position)
+        public void AddGhost(int entityId, Vector2 position, int life)
         {
-            Ghosts.Add(new Ghost(position, entityId));
+            Ghosts.Add(new Ghost(position, entityId, life));
         }
 
         public Ghost GetGhost(int entityId)
@@ -63,13 +60,13 @@ namespace CodeBuster
             return Ghosts.Find(e => e.EntityId == entityId);
         }
 
-        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible)
+        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible, int life)
         {
             Player.print("CREATE OR UPDATE GHOST : " + entityId.ToString());
             Ghost ghost = GetGhost(entityId);
             if (ghost == null)
             {
-                AddGhost(entityId, position);
+                AddGhost(entityId, position, life);
             }
             else
             {
@@ -77,6 +74,7 @@ namespace CodeBuster
                 ghost.IsVisible = isVisible;
                 ghost.KnownLocation = isVisible;
                 ghost.Captured = false;
+                ghost.Life = life;
             }
         }
 
@@ -629,7 +627,7 @@ namespace CodeBuster
 
                 if (buster.EnemyChased == null && buster.GhostChased == null && buster.State == BusterState.MoveState && !buster.IsHoldingAGhost())
                 {
-                    Player.print("Buster " + buster.EntityId + " is scouting " + buster.TargetPosition);
+                    Player.print("Buster " + buster.EntityId + " is scouting " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                     buster.IsScouting = true;
 
                     // I'm scouting, and I'm at my target position, I need a new cell to explore
@@ -660,7 +658,7 @@ namespace CodeBuster
                     }
                     else if(buster.GhostChased != null)
                     {
-                        Player.print("Buster " + buster.EntityId + " continue chasing enemy " + buster.GhostChased.EntityId);
+                        Player.print("Buster " + buster.EntityId + " continue chasing ghost " + buster.GhostChased.EntityId);
                         if (buster.TargetPosition == buster.GhostChased.Position)
                         {
                             buster.IsScouting = true;
