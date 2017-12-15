@@ -18,6 +18,8 @@ namespace CodeBuster
         int FirstRowPosition = 1555;
         int DistanceBetweenRows = 3111;
 
+        int cellsIndex = 0;
+
         public Map()
         {
             cells = new Cell[Rows, Columns];
@@ -87,6 +89,50 @@ namespace CodeBuster
         {
             Vector2 gridPosition = WorldToGridPosition(worldPosition);
             cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
+        }
+
+        public Vector2 GetNextCell()
+        {
+            List<Vector2> cellsToExplore = new List<Vector2>();
+
+            // Y, X
+            // Level 1 priority
+            cellsToExplore.Add(new Vector2(2, 2));
+            cellsToExplore.Add(new Vector2(3, 1));
+            cellsToExplore.Add(new Vector2(4, 0));
+            cellsToExplore.Add(new Vector2(1, 3));
+            cellsToExplore.Add(new Vector2(5, 0));
+            cellsToExplore.Add(new Vector2(0, 3));
+            // Level 2 priority
+            cellsToExplore.Add(new Vector2(2, 0));
+            cellsToExplore.Add(new Vector2(3, 0));
+            cellsToExplore.Add(new Vector2(2, 1));
+            cellsToExplore.Add(new Vector2(4, 1));
+            cellsToExplore.Add(new Vector2(5, 1));
+            cellsToExplore.Add(new Vector2(0, 2));
+            cellsToExplore.Add(new Vector2(1, 2));
+            cellsToExplore.Add(new Vector2(3, 2));
+            cellsToExplore.Add(new Vector2(2, 3));
+            cellsToExplore.Add(new Vector2(3, 3));
+            // Level 3 priority
+            cellsToExplore.Add(new Vector2(1, 0));
+            cellsToExplore.Add(new Vector2(0, 1));
+            cellsToExplore.Add(new Vector2(1, 1));
+            cellsToExplore.Add(new Vector2(4, 2));
+            cellsToExplore.Add(new Vector2(5, 2));
+            cellsToExplore.Add(new Vector2(4, 3));
+
+            cellsIndex++;
+            if (cellsIndex == cellsToExplore.Count)
+            {
+                cellsIndex = 0;
+            }
+
+            Vector2 nextCell = cellsToExplore[cellsIndex];
+
+            // Lock cell and return its position
+            cells[(int)nextCell.Y, (int)nextCell.X].IsLocked = true;
+            return cells[(int)nextCell.Y, (int)nextCell.X].Position;
         }
 
         public Vector2 GetOldestUnexploredPosition()

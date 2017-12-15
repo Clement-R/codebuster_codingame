@@ -705,10 +705,11 @@ namespace CodeBuster
 
         public Vector2 GetNextPosition(Buster buster)
         {
-            // Player.print("X : " + x.ToString() + " - Y : " + y.ToString());
-            // Vector2 nextPosition = GridMap.GridToWorldPosition(new Vector2(x, y));
             GridMap.UnlockCell(buster.TargetPosition);
-            Vector2 nextPosition = GridMap.GetOldestUnexploredPosition();
+            
+            // Vector2 nextPosition = GridMap.GetOldestUnexploredPosition();
+            Vector2 nextPosition = GridMap.GetNextCell();
+
             return nextPosition;
         }
 
