@@ -25,7 +25,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print(Position.ToString() + " | LastTurnExplored : " + LastTurnExplored.ToString());
+            Player.print(Position.ToString() + " | LastTurnExplored : " + LastTurnExplored.ToString() + " | Locked : " + IsLocked);
         }
     }
 }

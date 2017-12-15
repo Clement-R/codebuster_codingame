@@ -223,6 +223,7 @@ namespace CodeBuster
                     if (ghost.Position == buster.Position)
                     {
                         ghost.KnownLocation = false;
+                        ghost.Locked = false;
                     }
                 }
                 
@@ -281,10 +282,11 @@ namespace CodeBuster
                 int lowest = 9999;
                 foreach (var item in busterToGhost.FindAll(e => e.Item1 == buster.EntityId))
                 {
-                    if (item.Item3 < lowest)
+                    if (item.Item3 < lowest && !Ghosts.Find(e => e.EntityId == item.Item2).Locked)
                     {
                         lowest = item.Item3;
                         buster.GhostInRange = Ghosts.Find(e => e.EntityId == item.Item2);
+                        buster.GhostInRange.Locked = true;
                         Player.print("ONE GHOST FOUND IN AREA");
                     }
                 }

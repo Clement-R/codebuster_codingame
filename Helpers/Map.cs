@@ -96,6 +96,7 @@ namespace CodeBuster
             Cell oldestCell = null;
             foreach (var cell in cells)
             {
+                cell.Debug();
                 if(cell.LastTurnExplored < oldestCellValue && !cell.IsLocked)
                 {
                     oldestCellValue = cell.LastTurnExplored;

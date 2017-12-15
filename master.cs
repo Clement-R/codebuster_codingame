@@ -181,12 +181,14 @@ namespace CodeBuster
 {
     class Ghost : Entity
     {
+        public bool Locked { get; set; }
         public bool Captured { get; set; }
         public bool KnownLocation { get; set; }
 
         public Ghost(Vector2 initialPosition, int entityId) : base(initialPosition, entityId)
         {
             KnownLocation = true;
+            Locked = false;
         }
 
         public new void Debug()
@@ -217,7 +219,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print(Position.ToString() + " | LastTurnExplored : " + LastTurnExplored.ToString());
+            Player.print(Position.ToString() + " | LastTurnExplored : " + LastTurnExplored.ToString() + " | Locked : " + IsLocked);
         }
     }
 }
@@ -314,6 +316,7 @@ namespace CodeBuster
             Cell oldestCell = null;
             foreach (var cell in cells)
             {
+                cell.Debug();
                 if(cell.LastTurnExplored < oldestCellValue && !cell.IsLocked)
                 {
                     oldestCellValue = cell.LastTurnExplored;
@@ -587,6 +590,7 @@ namespace CodeBuster
                     if (ghost.Position == buster.Position)
                     {
                         ghost.KnownLocation = false;
+                        ghost.Locked = false;
                     }
                 }
                 
@@ -645,10 +649,11 @@ namespace CodeBuster
                 int lowest = 9999;
                 foreach (var item in busterToGhost.FindAll(e => e.Item1 == buster.EntityId))
                 {
-                    if (item.Item3 < lowest)
+                    if (item.Item3 < lowest && !Ghosts.Find(e => e.EntityId == item.Item2).Locked)
                     {
                         lowest = item.Item3;
                         buster.GhostInRange = Ghosts.Find(e => e.EntityId == item.Item2);
+                        buster.GhostInRange.Locked = true;
                         Player.print("ONE GHOST FOUND IN AREA");
                     }
                 }
@@ -1121,6 +1126,7 @@ namespace CodeBuster
 
         public override string Update(Buster buster)
         {
+            buster.TargetPosition = buster.Position;
             return "RELEASE";
         }
 
