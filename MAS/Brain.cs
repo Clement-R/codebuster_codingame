@@ -73,6 +73,7 @@ namespace CodeBuster
             {
                 ghost.Position = position;
                 ghost.IsVisible = isVisible;
+                ghost.KnownLocation = isVisible;
                 ghost.Captured = false;
             }
         }
@@ -142,54 +143,60 @@ namespace CodeBuster
             // Find the buster
             Buster buster = Busters.Find(e => e.EntityId == entityId);
             
-            // We got stunned
-            if(state == 2)
+            switch(state)
             {
-                // If we were carrying a ghost and we drop it outside of the base we mark it as catchable
-                if(!buster.IsInDropZone && buster.GhostCaptured != null)
-                {
-                    buster.GhostCaptured.Captured = false;
-                }
+                case 0:
+                    Player.print("Buster : " + entityId.ToString() + " / Idle");
+                    break;
 
-                // Reset capture variables
-                buster.GhostCaptured = null;
-                buster.GhostInRange = null;
-            }
+                case 1:
+                    Player.print("Buster : " + entityId.ToString() + " / Carrying");
+                    // Search the ghost
+                    Ghost ghost = Ghosts.Find(e => e.EntityId == value);
+                    // Set the captured ghost for the current buster
+                    buster.GhostCaptured = ghost;
+                    // Set the ghost as captured
+                    buster.GhostCaptured.Captured = true;
+                    break;
 
-            // Update its ghost captured value
-            if (state == 1)
-            {
-                Ghost ghost = Ghosts.Find(e => e.EntityId == value);
-                // Mark this ghost as captured so we can't capture it again
-                buster.GhostCaptured = ghost;
-                try
-                {
-                    Ghosts.Find(e => e.EntityId == value).Captured = true;
-                }
-                catch
-                {
-                    Player.print("ERROR NULL REF GHOST");
-                    // TODO : handle error case
+                case 2:
+                    Player.print("Buster : " + entityId.ToString() + " / Stunned");
+
+                    // We got stunned, release our ghost if needed
+                    // If we were carrying a ghost and we drop it outside of the base we mark it as catchable
+                    if (!buster.IsInDropZone && buster.GhostCaptured != null)
+                    {
+                        buster.GhostCaptured.Captured = false;
+                    }
+                    // Reset capture variables
                     buster.GhostCaptured = null;
-                    buster.GhostInRange = null;
-                }
-            }
-            else
-            {
-                buster.GhostCaptured = null;
-                buster.GhostInRange = null;
+                    break;
             }
 
             // Update its position
             buster.Position = position;
+
+            // Check for each buster if they are in base range
+            if (Vector2.Distance(buster.Position, BasePosition) <= 1600)
+            {
+                Player.print("Is in drop zone");
+                buster.IsInDropZone = true;
+            }
+            else
+            {
+                buster.IsInDropZone = false;
+            }
+
+            // Update map with the position of the buster
+            GridMap.UpdateMap(buster.Position, Turn);
         }
 
         /// <summary>
-        /// Method called at each new turn to refresh following informations :
-        /// - We set each ghost as non-visible and update their visibility when we get the information about what our busters can see
+        /// Method called at each new turn to refresh informations that we get each turn
         /// </summary>
         public void ResetTurnInformations()
         {
+            // Set all ghost to not visible and we will set them to visible during the turn
             foreach (Ghost ghost in Ghosts)
             {
                 ghost.IsVisible = false;
@@ -211,7 +218,19 @@ namespace CodeBuster
                     }
                 }
 
-                buster.EnemyInRange = -1;
+                foreach (var ghost in Ghosts)
+                {
+                    if (ghost.Position == buster.Position)
+                    {
+                        ghost.KnownLocation = false;
+                    }
+                }
+                
+
+                // We will set these values later when we will get all game informations
+                buster.GhostInRange = null;
+                buster.EnemyInRange = null;
+                buster.GhostCaptured = null;
             }
 
             foreach (Enemy enemy in Enemies)
@@ -227,7 +246,7 @@ namespace CodeBuster
         /// Compute the distance between each ghosts and each busters
         /// </summary>
         /// <returns></returns>
-        public List<Tuple<int, int, int>> ComputeDistancesBetweenEachBusterAndGhosts()
+        public List<Tuple<int, int, int>> GetEachGhostInZoneForBusters()
         {
             // buster id, ghost id, distance between them
             List<Tuple<int, int, int>> busterToGhost = new List<Tuple<int, int, int>>();
@@ -250,13 +269,97 @@ namespace CodeBuster
         }
 
         /// <summary>
-        /// Given all the game informations we update our Busters if last intels
+        /// Given all the game informations we update our Busters with last intels
         /// </summary>
         public void ComputeInformations()
         {
-            List<Tuple<int, int, int>> busterToGhost = ComputeDistancesBetweenEachBusterAndGhosts();
+            List<Tuple<int, int, int>> busterToGhost = GetEachGhostInZoneForBusters();
+            
+            foreach (var buster in Busters)
+            {
+                // Get the closest ghost that we can capture
+                int lowest = 9999;
+                foreach (var item in busterToGhost.FindAll(e => e.Item1 == buster.EntityId))
+                {
+                    if (item.Item3 < lowest)
+                    {
+                        lowest = item.Item3;
+                        buster.GhostInRange = Ghosts.Find(e => e.EntityId == item.Item2);
+                        Player.print("ONE GHOST FOUND IN AREA");
+                    }
+                }
 
-            /// TODO : need to move this into giveinformations
+                // If an enemy is visible and he's carrying a ghost : ATTACK HIM !
+                float lowestDistance = 99999f;
+                foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.IsCarryingAGhost == true))
+                {
+                    float distanceToEnemy = Vector2.Distance(buster.Position, enemy.Position);
+                    if (distanceToEnemy < lowestDistance)
+                    {
+                        lowestDistance = distanceToEnemy;
+                        buster.EnemyInRange = enemy;
+                        // TODO : Maybe remove this attribute, it's likely to cause bugs
+                        buster.TargetPosition = enemy.Position;
+                        Player.print("CHASING AN ENEMY : " + enemy.EntityId.ToString());
+                    }
+                }
+
+                // If there was no enemy carrying a ghost, check if we've an enemy at stun range
+                if (buster.EnemyInRange == null)
+                {
+                    // Check for each enemy if we are in range to stun one
+                    lowestDistance = 99999f;
+                    foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true && e.RemainingStunTurns == -1 && e.Targeted == false))
+                    {
+                        float distanceToEnemy = Vector2.Distance(buster.Position, enemy.Position);
+                        if (distanceToEnemy <= 1760)
+                        {
+                            if (distanceToEnemy < lowestDistance)
+                            {
+                                lowestDistance = distanceToEnemy;
+                                buster.EnemyInRange = enemy;
+                                enemy.Targeted = true;
+
+                                Player.print("GOING TO ATTACK");
+                            }
+                        }
+                    }
+                }
+
+                // If we can't capture or attack, we've to move
+                // First : Check for known ghost positions and chase them
+                if (buster.GhostInRange == null)
+                {
+                    Vector2 nextPos = new Vector2(0, 0);
+                    Ghost targetGhost = null;
+                    float smallest = 999999;
+                    foreach (Ghost freeGhost in Ghosts.FindAll(e => e.Captured == false && e.KnownLocation == true))
+                    {
+                        float dist = Vector2.Distance(buster.Position, freeGhost.Position);
+                        if (dist < smallest)
+                        {
+                            nextPos = freeGhost.Position;
+                            smallest = dist;
+                            targetGhost = freeGhost;
+                        }
+                    }
+
+                    // TODO : Now that our enemies capture a lot of ghosts we must stop derping on a known location, just go and if there is no ghost ask the map for a cell to discover
+
+                    if (nextPos != new Vector2(0, 0))
+                    {
+                        Player.print("CHASING A GHOST : " + targetGhost.EntityId.ToString());
+                        buster.TargetPosition = nextPos;
+                    }
+                }
+                // Second : Just scout
+                if (buster.Position == buster.TargetPosition)
+                {
+                    Player.print("I'm SCOUTING !");
+                    buster.TargetPosition = GetNextPosition();
+                }
+            }
+            
             /// // TODO : Opti - If two buster have the same ghost change to number 2 for one of them
             /*
             Vector2 pos = new Vector2(0, 0);
@@ -278,20 +381,19 @@ namespace CodeBuster
                 }
             }
             */
-
+            /*
+            List<Tuple<int, int, int>> busterToGhost = ComputeDistancesBetweenEachBusterAndGhosts();
             for (int i = 0; i < Busters.Count; i++)
             {
                 Player.print("Buster : " + i.ToString());
 
-                /*
                 if(pos != new Vector2(0, 0))
                 {
                     Busters[i].TargetPosition = pos;
                 }
-                */
-                
-                // Check if this buster is not busy
-                if (!Busters[i].IsBusy())
+
+            // Check if this buster is not busy
+            if (!Busters[i].IsBusy())
                 {
                     // Get the closest ghost
                     int lowest = 9999;
@@ -391,6 +493,7 @@ namespace CodeBuster
                     Busters[i].TargetPosition = GetNextPosition();
                 }
             }
+            */
             // GridMap.Debug();
         }
 

@@ -15,7 +15,7 @@ namespace CodeBuster
         public Ghost GhostInRange { get; set; }
         public BusterState State { get; set; }
         public BusterState LastState { get; set; }
-        public int EnemyInRange { get; set; }
+        public Enemy EnemyInRange { get; set; }
         public int LastTurnStun { get; set; }
         public bool CanStun { get; set; }
 
@@ -29,7 +29,7 @@ namespace CodeBuster
             GhostCaptured = null;
             BasePosition = basePosition;
             GhostInRange = null;
-            EnemyInRange = -1;
+            EnemyInRange = null;
 
             // Initialize MoveToPosition
             TargetPosition = initialPosition;
@@ -88,7 +88,7 @@ namespace CodeBuster
 
         public bool CanAttack()
         {
-            if(EnemyInRange != -1 && CanStun)
+            if(EnemyInRange != null && CanStun)
             {
                 return true;
             }

@@ -111,7 +111,7 @@ namespace CodeBuster
 
             return GridToWorldPosition(gridPosition);
         }
-
+        
         public Vector2 GridToWorldPosition(Vector2 gridPosition)
         {
             Vector2 worldPosition = new Vector2();
@@ -130,6 +130,22 @@ namespace CodeBuster
             }
 
             return worldPosition;
+        }
+        
+        /// <summary>
+        /// Given a world position and the actual turn we check if the buster is on the middle of a cell and update its informations
+        /// </summary>
+        /// <param name="busterPosition"></param>
+        /// <param name="turn"></param>
+        public void UpdateMap(Vector2 busterPosition, int turn)
+        {
+            Vector2 gridPosition = WorldToGridPosition(busterPosition);
+            // If the buster is at the center of a cell, update it
+            if (busterPosition == GridToWorldPosition(gridPosition))
+            {
+                cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
+                cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
+            }
         }
     }
 }

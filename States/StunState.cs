@@ -21,12 +21,12 @@ namespace CodeBuster
         {
             // STUN id
             buster.CanStun = false;
-            return "STUN " + buster.EnemyInRange.ToString();
+            return "STUN " + buster.EnemyInRange.EntityId.ToString();
         }
 
         public override void ComputeInformations(Buster buster)
         {
-            // If we've just attack an enemy and we've no more enemy to stun go to scout again
+            // If we've just attacked an enemy go to scout again
             if (!buster.CanAttack())
             {
                 buster.State = BusterState.MoveState;
