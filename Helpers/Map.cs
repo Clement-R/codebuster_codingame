@@ -27,7 +27,7 @@ namespace CodeBuster
 
             for (int i = 0; i < Rows; i++)
             {
-                baseX = DistanceBetweenColumns;
+                baseX = FirstColumnPosition;
                 for (int j = 0; j < Columns; j++)
                 {
                     cells[i, j] = new Cell(new Vector2(baseX, baseY));
@@ -96,19 +96,31 @@ namespace CodeBuster
             Cell oldestCell = null;
             foreach (var cell in cells)
             {
-                //cell.Debug();
                 if(cell.LastTurnExplored < oldestCellValue && !cell.IsLocked)
                 {
                     oldestCellValue = cell.LastTurnExplored;
                     oldestCell = cell;
-                    // oldestCell.Debug();
                 }
             }
 
-            oldestCell.IsLocked = true;
-            Vector2 gridPosition = WorldToGridPosition(oldestCell.Position);
+            List<Cell> rndCells = new List<Cell>();
+            foreach (var cell in cells)
+            {
+                if (cell.LastTurnExplored == oldestCellValue && !cell.IsLocked)
+                {
+                    rndCells.Add(cell);
+                }
+            }
+
+            rndCells.First().IsLocked = true;
+            Vector2 gridPosition = WorldToGridPosition(rndCells.First().Position);
 
             // TODO : Foreach cells get their position and calculate distance
+            
+            foreach (var cell in cells)
+            {
+                cell.Debug();
+            }
 
             return GridToWorldPosition(gridPosition);
         }
@@ -141,12 +153,24 @@ namespace CodeBuster
         public void UpdateMap(Vector2 busterPosition, int turn)
         {
             Vector2 gridPosition = WorldToGridPosition(busterPosition);
-            // If the buster is at the center of a cell, update it
+            Player.print(gridPosition.ToString());
+            Vector2 worldPosition = GridToWorldPosition(gridPosition);
+            Player.print(worldPosition.ToString());
+
+            // If the buster is around the center of a cell, update it
+            if ((worldPosition.X - 100 < busterPosition.X || busterPosition.X < worldPosition.X + 100) && (worldPosition.Y - 100 < busterPosition.Y || busterPosition.Y < worldPosition.Y + 100))
+            {
+                cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
+                cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
+            }
+
+            /*
             if (busterPosition == GridToWorldPosition(gridPosition))
             {
                 cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
                 cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
             }
+            */
         }
     }
 }

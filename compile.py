@@ -35,6 +35,3 @@ using System.Numerics;
         code_file.write(content)
         pyperclip.copy(content)
 
-
-
-
