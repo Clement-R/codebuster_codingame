@@ -18,6 +18,8 @@ namespace CodeBuster
         int FirstRowPosition = 1555;
         int DistanceBetweenRows = 3111;
 
+        // Second attempt at creating a map system
+        List<Vector2> cellsToExplore = new List<Vector2>();
         int cellsIndex = 0;
 
         public Map()
@@ -47,6 +49,34 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
+
+            // Populate cells to explore with cells given by priority
+            // Y, X
+            // Level 1 priority
+            cellsToExplore.Add(new Vector2(2, 2));
+            cellsToExplore.Add(new Vector2(3, 1));
+            cellsToExplore.Add(new Vector2(1, 3));
+            cellsToExplore.Add(new Vector2(4, 0));
+            cellsToExplore.Add(new Vector2(5, 0));
+            cellsToExplore.Add(new Vector2(0, 3));
+            // Level 2 priority
+            cellsToExplore.Add(new Vector2(2, 0));
+            cellsToExplore.Add(new Vector2(3, 0));
+            cellsToExplore.Add(new Vector2(2, 1));
+            cellsToExplore.Add(new Vector2(4, 1));
+            cellsToExplore.Add(new Vector2(5, 1));
+            cellsToExplore.Add(new Vector2(0, 2));
+            cellsToExplore.Add(new Vector2(1, 2));
+            cellsToExplore.Add(new Vector2(3, 2));
+            cellsToExplore.Add(new Vector2(2, 3));
+            cellsToExplore.Add(new Vector2(3, 3));
+            // Level 3 priority
+            cellsToExplore.Add(new Vector2(1, 0));
+            cellsToExplore.Add(new Vector2(0, 1));
+            cellsToExplore.Add(new Vector2(1, 1));
+            cellsToExplore.Add(new Vector2(4, 2));
+            cellsToExplore.Add(new Vector2(5, 2));
+            cellsToExplore.Add(new Vector2(4, 3));
         }
 
         public void Debug()
@@ -93,42 +123,15 @@ namespace CodeBuster
 
         public Vector2 GetNextCell()
         {
-            List<Vector2> cellsToExplore = new List<Vector2>();
+            Vector2 nextCell = cellsToExplore[cellsIndex];
 
-            // Y, X
-            // Level 1 priority
-            cellsToExplore.Add(new Vector2(2, 2));
-            cellsToExplore.Add(new Vector2(3, 1));
-            cellsToExplore.Add(new Vector2(4, 0));
-            cellsToExplore.Add(new Vector2(1, 3));
-            cellsToExplore.Add(new Vector2(5, 0));
-            cellsToExplore.Add(new Vector2(0, 3));
-            // Level 2 priority
-            cellsToExplore.Add(new Vector2(2, 0));
-            cellsToExplore.Add(new Vector2(3, 0));
-            cellsToExplore.Add(new Vector2(2, 1));
-            cellsToExplore.Add(new Vector2(4, 1));
-            cellsToExplore.Add(new Vector2(5, 1));
-            cellsToExplore.Add(new Vector2(0, 2));
-            cellsToExplore.Add(new Vector2(1, 2));
-            cellsToExplore.Add(new Vector2(3, 2));
-            cellsToExplore.Add(new Vector2(2, 3));
-            cellsToExplore.Add(new Vector2(3, 3));
-            // Level 3 priority
-            cellsToExplore.Add(new Vector2(1, 0));
-            cellsToExplore.Add(new Vector2(0, 1));
-            cellsToExplore.Add(new Vector2(1, 1));
-            cellsToExplore.Add(new Vector2(4, 2));
-            cellsToExplore.Add(new Vector2(5, 2));
-            cellsToExplore.Add(new Vector2(4, 3));
-
+            // TODO : Use cell aging system
+            // TODO : Remove that and give the first cell that's unlocked and that's oldest or equally aged than the next (add security for last cell)
             cellsIndex++;
             if (cellsIndex == cellsToExplore.Count)
             {
                 cellsIndex = 0;
             }
-
-            Vector2 nextCell = cellsToExplore[cellsIndex];
 
             // Lock cell and return its position
             cells[(int)nextCell.Y, (int)nextCell.X].IsLocked = true;
@@ -192,31 +195,22 @@ namespace CodeBuster
         }
         
         /// <summary>
-        /// Given a world position and the actual turn we check if the buster is on the middle of a cell and update its informations
+        /// Given a world position and the actual turn we check if the buster is around the middle of a cell and update its informations
         /// </summary>
         /// <param name="busterPosition"></param>
         /// <param name="turn"></param>
         public void UpdateMap(Vector2 busterPosition, int turn)
         {
             Vector2 gridPosition = WorldToGridPosition(busterPosition);
-            Player.print(gridPosition.ToString());
             Vector2 worldPosition = GridToWorldPosition(gridPosition);
-            Player.print(worldPosition.ToString());
 
             // If the buster is around the center of a cell, update it
-            if ((worldPosition.X - 100 < busterPosition.X || busterPosition.X < worldPosition.X + 100) && (worldPosition.Y - 100 < busterPosition.Y || busterPosition.Y < worldPosition.Y + 100))
+            int aroundValue = 150;
+            if ((worldPosition.X - aroundValue < busterPosition.X || busterPosition.X < worldPosition.X + aroundValue) && (worldPosition.Y - aroundValue < busterPosition.Y || busterPosition.Y < worldPosition.Y + aroundValue))
             {
                 cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
                 cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
             }
-
-            /*
-            if (busterPosition == GridToWorldPosition(gridPosition))
-            {
-                cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
-                cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
-            }
-            */
         }
     }
 }

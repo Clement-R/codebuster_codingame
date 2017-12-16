@@ -198,12 +198,14 @@ namespace CodeBuster
         public bool Captured { get; set; }
         public bool KnownLocation { get; set; }
         public int Life { get; set; }
+        public int NumberOfBustersCapturing { get; set; }
 
-        public Ghost(Vector2 initialPosition, int entityId, int life) : base(initialPosition, entityId)
+        public Ghost(Vector2 initialPosition, int entityId, int life, int numberOfBusterCapturing) : base(initialPosition, entityId)
         {
             KnownLocation = true;
             Locked = false;
             Life = life;
+            NumberOfBustersCapturing = numberOfBusterCapturing;
         }
 
         public new void Debug()
@@ -253,6 +255,8 @@ namespace CodeBuster
         int FirstRowPosition = 1555;
         int DistanceBetweenRows = 3111;
 
+        // Second attempt at creating a map system
+        List<Vector2> cellsToExplore = new List<Vector2>();
         int cellsIndex = 0;
 
         public Map()
@@ -260,7 +264,7 @@ namespace CodeBuster
             cells = new Cell[Rows, Columns];
 
             int baseX = FirstColumnPosition;
-            int baseY = DistanceBetweenRows;
+            int baseY = FirstRowPosition;
 
             for (int i = 0; i < Rows; i++)
             {
@@ -282,6 +286,34 @@ namespace CodeBuster
                     baseY = 9000;
                 }
             }
+
+            // Populate cells to explore with cells given by priority
+            // Y, X
+            // Level 1 priority
+            cellsToExplore.Add(new Vector2(2, 2));
+            cellsToExplore.Add(new Vector2(3, 1));
+            cellsToExplore.Add(new Vector2(1, 3));
+            cellsToExplore.Add(new Vector2(4, 0));
+            cellsToExplore.Add(new Vector2(5, 0));
+            cellsToExplore.Add(new Vector2(0, 3));
+            // Level 2 priority
+            cellsToExplore.Add(new Vector2(2, 0));
+            cellsToExplore.Add(new Vector2(3, 0));
+            cellsToExplore.Add(new Vector2(2, 1));
+            cellsToExplore.Add(new Vector2(4, 1));
+            cellsToExplore.Add(new Vector2(5, 1));
+            cellsToExplore.Add(new Vector2(0, 2));
+            cellsToExplore.Add(new Vector2(1, 2));
+            cellsToExplore.Add(new Vector2(3, 2));
+            cellsToExplore.Add(new Vector2(2, 3));
+            cellsToExplore.Add(new Vector2(3, 3));
+            // Level 3 priority
+            cellsToExplore.Add(new Vector2(1, 0));
+            cellsToExplore.Add(new Vector2(0, 1));
+            cellsToExplore.Add(new Vector2(1, 1));
+            cellsToExplore.Add(new Vector2(4, 2));
+            cellsToExplore.Add(new Vector2(5, 2));
+            cellsToExplore.Add(new Vector2(4, 3));
         }
 
         public void Debug()
@@ -328,42 +360,15 @@ namespace CodeBuster
 
         public Vector2 GetNextCell()
         {
-            List<Vector2> cellsToExplore = new List<Vector2>();
+            Vector2 nextCell = cellsToExplore[cellsIndex];
 
-            // Y, X
-            // Level 1 priority
-            cellsToExplore.Add(new Vector2(2, 2));
-            cellsToExplore.Add(new Vector2(3, 1));
-            cellsToExplore.Add(new Vector2(4, 0));
-            cellsToExplore.Add(new Vector2(1, 3));
-            cellsToExplore.Add(new Vector2(5, 0));
-            cellsToExplore.Add(new Vector2(0, 3));
-            // Level 2 priority
-            cellsToExplore.Add(new Vector2(2, 0));
-            cellsToExplore.Add(new Vector2(3, 0));
-            cellsToExplore.Add(new Vector2(2, 1));
-            cellsToExplore.Add(new Vector2(4, 1));
-            cellsToExplore.Add(new Vector2(5, 1));
-            cellsToExplore.Add(new Vector2(0, 2));
-            cellsToExplore.Add(new Vector2(1, 2));
-            cellsToExplore.Add(new Vector2(3, 2));
-            cellsToExplore.Add(new Vector2(2, 3));
-            cellsToExplore.Add(new Vector2(3, 3));
-            // Level 3 priority
-            cellsToExplore.Add(new Vector2(1, 0));
-            cellsToExplore.Add(new Vector2(0, 1));
-            cellsToExplore.Add(new Vector2(1, 1));
-            cellsToExplore.Add(new Vector2(4, 2));
-            cellsToExplore.Add(new Vector2(5, 2));
-            cellsToExplore.Add(new Vector2(4, 3));
-
+            // TODO : Use cell aging system
+            // TODO : Remove that and give the first cell that's unlocked and that's oldest or equally aged than the next (add security for last cell)
             cellsIndex++;
             if (cellsIndex == cellsToExplore.Count)
             {
                 cellsIndex = 0;
             }
-
-            Vector2 nextCell = cellsToExplore[cellsIndex];
 
             // Lock cell and return its position
             cells[(int)nextCell.Y, (int)nextCell.X].IsLocked = true;
@@ -427,31 +432,22 @@ namespace CodeBuster
         }
         
         /// <summary>
-        /// Given a world position and the actual turn we check if the buster is on the middle of a cell and update its informations
+        /// Given a world position and the actual turn we check if the buster is around the middle of a cell and update its informations
         /// </summary>
         /// <param name="busterPosition"></param>
         /// <param name="turn"></param>
         public void UpdateMap(Vector2 busterPosition, int turn)
         {
             Vector2 gridPosition = WorldToGridPosition(busterPosition);
-            Player.print(gridPosition.ToString());
             Vector2 worldPosition = GridToWorldPosition(gridPosition);
-            Player.print(worldPosition.ToString());
 
             // If the buster is around the center of a cell, update it
-            if ((worldPosition.X - 100 < busterPosition.X || busterPosition.X < worldPosition.X + 100) && (worldPosition.Y - 100 < busterPosition.Y || busterPosition.Y < worldPosition.Y + 100))
+            int aroundValue = 150;
+            if ((worldPosition.X - aroundValue < busterPosition.X || busterPosition.X < worldPosition.X + aroundValue) && (worldPosition.Y - aroundValue < busterPosition.Y || busterPosition.Y < worldPosition.Y + aroundValue))
             {
                 cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
                 cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
             }
-
-            /*
-            if (busterPosition == GridToWorldPosition(gridPosition))
-            {
-                cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
-                cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
-            }
-            */
         }
     }
 }
@@ -498,13 +494,7 @@ namespace CodeBuster
 
         public void AddBuster(int entityId, Vector2 position)
         {
-            // TODO : Remove base position from the Buster constructor
             Busters.Add(new Buster(entityId, position, BasePosition));
-        }
-
-        public void AddGhost(int entityId, Vector2 position, int life)
-        {
-            Ghosts.Add(new Ghost(position, entityId, life));
         }
 
         public Ghost GetGhost(int entityId)
@@ -512,21 +502,25 @@ namespace CodeBuster
             return Ghosts.Find(e => e.EntityId == entityId);
         }
 
-        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible, int life)
+        public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible, int life, int numberOfBusterCapturing)
         {
-            Player.print("CREATE OR UPDATE GHOST : " + entityId.ToString());
             Ghost ghost = GetGhost(entityId);
+            
             if (ghost == null)
             {
-                AddGhost(entityId, position, life);
+                Player.print("Create ghost : " + entityId);
+                Ghosts.Add(new Ghost(position, entityId, life, numberOfBusterCapturing));
+                Ghosts.Last().Debug();
             }
             else
             {
+                Player.print("Update ghost : " + entityId);
                 ghost.Position = position;
                 ghost.IsVisible = isVisible;
                 ghost.KnownLocation = isVisible;
                 ghost.Captured = false;
                 ghost.Life = life;
+                ghost.Debug();
             }
         }
 
@@ -559,6 +553,10 @@ namespace CodeBuster
                     // stun
                     remainingStunTurns = value;
                     break;
+                case 3:
+                    // capturing
+                    isCapturing = true;
+                    break;
             }
             
             // Search the enemy
@@ -584,12 +582,13 @@ namespace CodeBuster
             }
         }
 
-        /// <summary> UpdateBusterInformations give informations to the buster according to its role
-        /// entityId : id of the buster
-        /// value : Ghost id being carried, number of turns before stun goes away
-        /// state : 0=idle, 1=carrying a ghost, 2=stuned buster
-        /// TODO : Each turn give infos to the busters about the strategy chosen by the multi-agent system
+        /// <summary>
+        /// Update the buser with the turn's informations
         /// </summary>
+        /// <param name="entityId">id of the buster</param>
+        /// <param name="position"></param>
+        /// <param name="value">Ghost id being carried, number of turns before stun goes away</param>
+        /// <param name="state">0=idle, 1=carrying a ghost, 2=stuned buster</param>
         public void UpdateBusterInformations(int entityId, Vector2 position, int value, int state)
         {
             // Find the buster
@@ -620,18 +619,21 @@ namespace CodeBuster
                     {
                         buster.GhostCaptured.Captured = false;
                     }
-                    // Reset capture variables
+                    // Reset capture and scout variables
                     buster.GhostCaptured = null;
-
                     buster.GhostChased = null;
                     buster.EnemyChased = null;
+                    buster.TargetPosition = buster.Position;
+                    StopScouting(buster);
 
                     buster.IsStunned = true;
+                    
                     break;
             }
 
             // Update its position
             buster.Position = position;
+            Player.print("Buster is at map position : " + GridMap.WorldToGridPosition(buster.Position));
 
             // Check for buster if they are in base range
             if (Vector2.Distance(buster.Position, BasePosition) <= 1600)
@@ -783,7 +785,7 @@ namespace CodeBuster
         public List<Tuple<int, int>> GetCapturableGhosts(Buster buster)
         {
             List<Tuple<int, int>> capturableGhosts = new List<Tuple<int, int>>();
-            foreach (var ghost in Ghosts.FindAll(e => e.Locked == false && e.IsVisible == true))
+            foreach (var ghost in Ghosts.FindAll(e => e.IsVisible == true))
             {
                 // If this ghost is not already captured
                 if (!CapturedGhost.Contains(ghost.EntityId))
@@ -854,6 +856,7 @@ namespace CodeBuster
             foreach (var buster in Busters.FindAll(e => e.IsHoldingAGhost() == false && e.IsStunned == false))
             {
                 Player.print("Buster " + buster.EntityId + " search to capture");
+                
                 // First action : Try to capture a ghost
                 // We retrieve all ghosts in capture range
                 List<Tuple<int, int>> ghostsInRange = GetCapturableGhosts(buster);
@@ -875,7 +878,6 @@ namespace CodeBuster
                             {
                                 // If we're the closest, we capture it
                                 buster.GhostInRange = foundGhost;
-                                buster.GhostInRange.Locked = true;
                                 break;
                             }
                             else
@@ -885,7 +887,6 @@ namespace CodeBuster
                                 if (otherBuster.IsBusy())
                                 {
                                     buster.GhostInRange = foundGhost;
-                                    buster.GhostInRange.Locked = true;
                                     break;
                                 }
                             }
@@ -1069,14 +1070,16 @@ namespace CodeBuster
                 }
             }
 
-            // If the buster is moving but not chasing something and not going to release a ghost, then he's actually scouting
+            // With all the informations gathered we can set the TargetPosition value of our busters according to their choosed action
             foreach (var buster in Busters.FindAll(e => e.IsStunned == false))
             {
+                // If the buster is holding a ghost we tell them to go to the base
                 if(buster.IsHoldingAGhost())
                 {
                     buster.TargetPosition = BasePosition;
                 }
 
+                // If the buster is moving but not chasing something and not going to release a ghost, then he's actually scouting
                 if (buster.EnemyChased == null && buster.GhostChased == null && buster.State == BusterState.MoveState && !buster.IsHoldingAGhost())
                 {
                     Player.print("Buster " + buster.EntityId + " is scouting " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
@@ -1085,21 +1088,23 @@ namespace CodeBuster
                     // I'm scouting, and I'm at my target position, I need a new cell to explore
                     if (buster.TargetPosition == buster.Position)
                     {
-                        Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                         buster.TargetPosition = GetNextPosition(buster);
+                        Player.print("Buster " + buster.EntityId + " is taking a new scout target " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                     }
                 }
                 else
                 {
-                    // If I was scouting and I now have a new order, I cancel my scout order
+                    
                     if (buster.IsScouting)
                     {
+                        // If I was scouting and I now have a new order, I cancel my scout order
                         Player.print("Buster " + buster.EntityId + " stop scouting");
                         StopScouting(buster);
                     }
                     else if(buster.EnemyChased != null)
                     {
                         Player.print("Buster " + buster.EntityId + " continue chasing enemy " + buster.EnemyChased.EntityId);
+                        // If I'm chasing an enemy and he's not visible anymore or there is nothing at his position, we cancel and scout
                         if (buster.TargetPosition == buster.EnemyChased.Position || !buster.EnemyChased.IsVisible)
                         {
                             buster.EnemyChased = null;
@@ -1110,9 +1115,11 @@ namespace CodeBuster
                     }
                     else if(buster.GhostChased != null)
                     {
-                        Player.print("Buster " + buster.EntityId + " continue chasing enemy " + buster.GhostChased.EntityId);
-                        if (buster.TargetPosition == buster.GhostChased.Position)
+                        Player.print("Buster " + buster.EntityId + " continue chasing ghost " + buster.GhostChased.EntityId);
+                        // If I'm chasing a ghost and there is nothing at his position, we cancel and scout
+                        if (buster.Position == buster.GhostChased.Position)
                         {
+                            buster.GhostChased = null;
                             buster.IsScouting = true;
                             Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                             buster.TargetPosition = GetNextPosition(buster);
@@ -1248,7 +1255,7 @@ namespace CodeBuster
                     int x = int.Parse(inputs[1]);
                     int y = int.Parse(inputs[2]); // position of this buster / ghost
                     int entityType = int.Parse(inputs[3]); // the team id if it is a buster, -1 if it is a ghost.
-                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster. For ghosts : life.
+                    int state = int.Parse(inputs[4]); // For busters: 0=idle, 1=carrying a ghost, 2=stuned buster, 3=buster capturing. For ghosts : life.
                     int value = int.Parse(inputs[5]); // For busters: Ghost id being carried, number of turns before stun goes away. For ghosts: number of busters attempting to trap this ghost.
 
                     // If this is the first turn, we initialize our Busters with their position, id and the base position
@@ -1263,7 +1270,7 @@ namespace CodeBuster
                     if (entityType == -1)
                     {
                         // If the current entity is a ghost
-                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true, state);
+                        brain.CreateOrUpdateGhost(entityId, new Vector2(x, y), true, state, value);
                     }
                     else if (entityType == brain.TeamId)
                     {
