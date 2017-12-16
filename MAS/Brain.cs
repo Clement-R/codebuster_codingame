@@ -62,11 +62,13 @@ namespace CodeBuster
 
         public void CreateOrUpdateGhost(int entityId, Vector2 position, bool isVisible, int life)
         {
-            Player.print("CREATE OR UPDATE GHOST : " + entityId.ToString());
             Ghost ghost = GetGhost(entityId);
+            Player.print("CREATE OR UPDATE GHOST : " + entityId);
+            
             if (ghost == null)
             {
                 AddGhost(entityId, position, life);
+                Ghosts.Last().Debug();
             }
             else
             {
@@ -75,6 +77,7 @@ namespace CodeBuster
                 ghost.KnownLocation = isVisible;
                 ghost.Captured = false;
                 ghost.Life = life;
+                ghost.Debug();
             }
         }
 
@@ -633,8 +636,8 @@ namespace CodeBuster
                     // I'm scouting, and I'm at my target position, I need a new cell to explore
                     if (buster.TargetPosition == buster.Position)
                     {
-                        Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                         buster.TargetPosition = GetNextPosition(buster);
+                        Player.print("Buster " + buster.EntityId + " is taking a new scout target " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                     }
                 }
                 else
@@ -661,6 +664,7 @@ namespace CodeBuster
                         Player.print("Buster " + buster.EntityId + " continue chasing ghost " + buster.GhostChased.EntityId);
                         if (buster.TargetPosition == buster.GhostChased.Position)
                         {
+                            buster.GhostChased = null;
                             buster.IsScouting = true;
                             Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                             buster.TargetPosition = GetNextPosition(buster);
