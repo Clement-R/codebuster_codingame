@@ -920,6 +920,10 @@ namespace CodeBuster
                         // Retrieve the actual ghost
                         Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
 
+                        if(!foundGhost.Locked)
+                        {
+                            buster.GotAnOrder = true;
+                        }
                         // DO THINGS PLEASE
                         // 
                         //

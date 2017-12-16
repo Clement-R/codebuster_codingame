@@ -68,6 +68,7 @@ namespace CodeBuster
 
                 if (!brain.TeamInitialized)
                 {
+                    brain.SetRoles();
                     brain.TeamInitialized = true;
                 }
 

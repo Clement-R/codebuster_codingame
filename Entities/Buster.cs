@@ -25,6 +25,8 @@ namespace CodeBuster
         public bool IsStunned { get; set; }
         public bool GotAnOrder { get; set; }
 
+        public string Role { get; set; }
+
         public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition) : base(initialPosition, entityId)
         {
             // Initialize values
@@ -45,6 +47,9 @@ namespace CodeBuster
 
             // Initialize default state
             State = BusterState.MoveState;
+
+            // Intialize default role
+            Role = "Basic";
         }
 
         public void ComputeInformations()

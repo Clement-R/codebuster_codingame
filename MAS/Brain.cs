@@ -415,7 +415,7 @@ namespace CodeBuster
         /// </summary>
         public void ComputeInformations()
         {
-            // First we check if our buster is already doing a task 
+            // First we check if our buster is already doing a task or is stunned and skip all the task planning for them
             foreach (var buster in Busters)
             {
                 if(buster.IsHoldingAGhost() || buster.IsStunned)
@@ -475,18 +475,18 @@ namespace CodeBuster
                 // If no ghost is easy to capture we want to check if we're not just too close from one
                 if (buster.GhostInRange == null)
                 {
-                    // TODO : Get all ghosts in too close distance ( < 600 ) and move in the opposite direction to the vector between the buster and the ghost to capture it at the next turn
+                    // Get all ghosts in close distance ( < 900 ) and wait to capture on next turn
                     List<Tuple<int, int>> closeRangeGhosts = GetCloseRangeGhosts(buster);
                     foreach (var ghost in closeRangeGhosts)
                     {
                         // Retrieve the actual ghost
                         Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
 
-                        // DO THINGS PLEASE
-                        // 
-                        //
-                        //
-                        //
+                        // Just wait one turn
+                        if(!foundGhost.Locked)
+                        {
+                            buster.GotAnOrder = true;
+                        }
                     }
                 }
             }
@@ -818,6 +818,15 @@ namespace CodeBuster
             Player.print("-- ************** --");
 
             Player.print("Turn : " + Turn.ToString());
+        }
+
+        public void SetRoles()
+        {
+            if (Busters.Count > 2)
+            {
+                // One of our buster is going to be a blocker : go to enemy base and attack every enemy that has a ghost
+                Busters[0].Role = "Blocker";
+            }
         }
     }
 }
