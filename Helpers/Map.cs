@@ -25,7 +25,7 @@ namespace CodeBuster
             cells = new Cell[Rows, Columns];
 
             int baseX = FirstColumnPosition;
-            int baseY = DistanceBetweenRows;
+            int baseY = FirstRowPosition;
 
             for (int i = 0; i < Rows; i++)
             {
