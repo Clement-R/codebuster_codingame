@@ -2,14 +2,12 @@
 
 namespace CodeBuster
 {
-    class Buster
+    class Buster : Entity
     {
-        public Vector2 Position { get; set; }
         public Vector2 GhostPosition { get; set; }
         public Vector2 EnemyPosition { get; set; }
         public Vector2 TargetPosition { get; set; }
         public Vector2 BasePosition { get; set; }
-        public int EntityId { get; }
         public bool IsInDropZone { get; set; }
         // The ghost that I'm carrying
         public Ghost GhostCaptured { get; set; }
@@ -26,11 +24,8 @@ namespace CodeBuster
         public bool IsScouting { get; set; }
         public bool IsStunned { get; set; }
 
-        public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
+        public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition) : base(initialPosition, entityId)
         {
-            Position = initialPosition;
-            EntityId = entityId;
-
             // Initialize values
             IsInDropZone = false;
             IsScouting = false;
