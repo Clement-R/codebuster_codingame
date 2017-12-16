@@ -10,14 +10,12 @@ using System.Numerics;
 
 namespace CodeBuster
 {
-    class Buster
+    class Buster : Entity
     {
-        public Vector2 Position { get; set; }
         public Vector2 GhostPosition { get; set; }
         public Vector2 EnemyPosition { get; set; }
         public Vector2 TargetPosition { get; set; }
         public Vector2 BasePosition { get; set; }
-        public int EntityId { get; }
         public bool IsInDropZone { get; set; }
         // The ghost that I'm carrying
         public Ghost GhostCaptured { get; set; }
@@ -33,12 +31,10 @@ namespace CodeBuster
         public bool CanStun { get; set; }
         public bool IsScouting { get; set; }
         public bool IsStunned { get; set; }
+        public bool GotAnOrder { get; set; }
 
-        public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition)
+        public Buster(int entityId, Vector2 initialPosition, Vector2 basePosition) : base(initialPosition, entityId)
         {
-            Position = initialPosition;
-            EntityId = entityId;
-
             // Initialize values
             IsInDropZone = false;
             IsScouting = false;
@@ -50,6 +46,7 @@ namespace CodeBuster
             GhostChased = null;
             CanStun = true;
             IsStunned = false;
+            GotAnOrder = false;
 
             // Initialize MoveToPosition
             TargetPosition = initialPosition;
@@ -117,7 +114,7 @@ namespace CodeBuster
             return false;
         }
 
-        public void Debug()
+        public new void Debug()
         {
             Player.print("Buster " + EntityId + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / can stun : " + CanStun + " / last turn stun : " + LastTurnStun.ToString() + " / ghost chased : " + ((GhostChased != null) ? GhostChased.EntityId : -1) + " / ghost in range : " + ((GhostInRange != null) ? GhostInRange.EntityId : -1) + " / enemy chased : " + ((EnemyChased != null) ? EnemyChased.EntityId : -1) + " / enemy in range : " + ((EnemyInRange != null) ? EnemyInRange.EntityId : -1) + " / stunned : " + IsStunned + " / busy : " + IsBusy());
         }
@@ -236,7 +233,7 @@ namespace CodeBuster
 
         public void Debug()
         {
-            Player.print(Position.ToString() + " | LastTurnExplored : " + LastTurnExplored.ToString() + " | Locked : " + IsLocked);
+            Player.print(Position + " | LastTurnExplored : " + LastTurnExplored.ToString() + " | Locked : " + IsLocked);
         }
     }
 }
@@ -256,8 +253,7 @@ namespace CodeBuster
         int DistanceBetweenRows = 3111;
 
         // Second attempt at creating a map system
-        List<Vector2> cellsToExplore = new List<Vector2>();
-        int cellsIndex = 0;
+        SortedList cellsToExplore = new SortedList();
 
         public Map()
         {
@@ -290,30 +286,30 @@ namespace CodeBuster
             // Populate cells to explore with cells given by priority
             // Y, X
             // Level 1 priority
-            cellsToExplore.Add(new Vector2(2, 2));
-            cellsToExplore.Add(new Vector2(3, 1));
-            cellsToExplore.Add(new Vector2(1, 3));
-            cellsToExplore.Add(new Vector2(4, 0));
-            cellsToExplore.Add(new Vector2(5, 0));
-            cellsToExplore.Add(new Vector2(0, 3));
-            // Level 2 priority
-            cellsToExplore.Add(new Vector2(2, 0));
-            cellsToExplore.Add(new Vector2(3, 0));
-            cellsToExplore.Add(new Vector2(2, 1));
-            cellsToExplore.Add(new Vector2(4, 1));
-            cellsToExplore.Add(new Vector2(5, 1));
-            cellsToExplore.Add(new Vector2(0, 2));
-            cellsToExplore.Add(new Vector2(1, 2));
-            cellsToExplore.Add(new Vector2(3, 2));
-            cellsToExplore.Add(new Vector2(2, 3));
-            cellsToExplore.Add(new Vector2(3, 3));
-            // Level 3 priority
-            cellsToExplore.Add(new Vector2(1, 0));
-            cellsToExplore.Add(new Vector2(0, 1));
-            cellsToExplore.Add(new Vector2(1, 1));
-            cellsToExplore.Add(new Vector2(4, 2));
-            cellsToExplore.Add(new Vector2(5, 2));
-            cellsToExplore.Add(new Vector2(4, 3));
+            cellsToExplore.Add(0, new Vector2(2, 2));
+            cellsToExplore.Add(1, new Vector2(3, 1));
+            cellsToExplore.Add(2, new Vector2(1, 3));
+            cellsToExplore.Add(3, new Vector2(4, 0));
+            cellsToExplore.Add(4, new Vector2(5, 0));
+            cellsToExplore.Add(5, new Vector2(0, 3));
+            // Level 2 priority 
+            cellsToExplore.Add(6, new Vector2(2, 0));
+            cellsToExplore.Add(7, new Vector2(3, 0));
+            cellsToExplore.Add(8, new Vector2(2, 1));
+            cellsToExplore.Add(9, new Vector2(4, 1));
+            cellsToExplore.Add(10, new Vector2(5, 1));
+            cellsToExplore.Add(11, new Vector2(0, 2));
+            cellsToExplore.Add(12, new Vector2(1, 2));
+            cellsToExplore.Add(13, new Vector2(3, 2));
+            cellsToExplore.Add(14, new Vector2(2, 3));
+            cellsToExplore.Add(15, new Vector2(3, 3));
+            // Level 3 priority 
+            cellsToExplore.Add(16, new Vector2(1, 0));
+            cellsToExplore.Add(17, new Vector2(0, 1));
+            cellsToExplore.Add(18, new Vector2(1, 1));
+            cellsToExplore.Add(19, new Vector2(4, 2));
+            cellsToExplore.Add(20, new Vector2(5, 2));
+            cellsToExplore.Add(21, new Vector2(4, 3));
         }
 
         public void Debug()
@@ -322,6 +318,7 @@ namespace CodeBuster
             {
                 for (int j = 0; j < Columns; j++)
                 {
+                    Player.print(j + " : " + i);
                     cells[i, j].Debug();
                 }
             }
@@ -334,15 +331,10 @@ namespace CodeBuster
                 string row = "";
                 for (int j = 0; j < Columns; j++)
                 {
-                    row += j.ToString() + ":" + i.ToString() + "* " + cells[i, j].LastTurnExplored.ToString() + " |";
+                    row += j.ToString() + ":" + i.ToString() + " / " + cells[i, j].LastTurnExplored + " / "  + (cells[i, j].IsLocked ? "True  ": "False") + " |";
                 }
                 Player.print(row);
             }
-        }
-
-        public Vector2 WorldToGridPosition(Vector2 position)
-        {
-            return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
         }
 
         public void SetCellAge(Vector2 worldPosition, int age)
@@ -358,59 +350,58 @@ namespace CodeBuster
             cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
         }
 
+        public void MarkCellAsVisited(Vector2 worldPosition, int age)
+        {
+            Vector2 gridPosition = WorldToGridPosition(worldPosition);
+            cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
+            cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = age;
+
+            Player.print("Cell " + gridPosition.Y + " " + gridPosition.X + " has been marked as visited on turn " + age.ToString());
+        }
+
+        public int GetOldestCellValue()
+        {
+            int minLastTurnExplored = 999;
+            foreach (var cell in cells)
+            {
+                if(cell.LastTurnExplored < minLastTurnExplored)
+                {
+                    minLastTurnExplored = cell.LastTurnExplored; 
+                }
+            }
+
+            return minLastTurnExplored;
+        }
+
         public Vector2 GetNextCell()
         {
-            Vector2 nextCell = cellsToExplore[cellsIndex];
-
-            // TODO : Use cell aging system
-            // TODO : Remove that and give the first cell that's unlocked and that's oldest or equally aged than the next (add security for last cell)
-            cellsIndex++;
-            if (cellsIndex == cellsToExplore.Count)
+            Cell nextCell = null;
+            // We search the cell that has the lowest LastTurnExplored value
+            int minLastTurnExplored = GetOldestCellValue();
+            Player.print("Minimum LastTurnExplored : " + minLastTurnExplored);
+            for (int i = 0; i < cellsToExplore.Count; i++)
             {
-                cellsIndex = 0;
+                Vector2 cell = (Vector2) cellsToExplore.GetByIndex(i);
+                Cell cellFound = cells[(int)cell.Y, (int)cell.X];
+                // If the actual cell has the same LastTurnExplored value we return it
+                if (cellFound.LastTurnExplored == minLastTurnExplored && !cellFound.IsLocked)
+                {
+                    Player.print("Cell found : " + cellFound.Position);
+                    nextCell = cellFound;
+                    break;
+                }
             }
 
             // Lock cell and return its position
-            cells[(int)nextCell.Y, (int)nextCell.X].IsLocked = true;
-            return cells[(int)nextCell.Y, (int)nextCell.X].Position;
+            nextCell.IsLocked = true;
+            return nextCell.Position;
         }
 
-        public Vector2 GetOldestUnexploredPosition()
+        public Vector2 WorldToGridPosition(Vector2 position)
         {
-            // Search the cell with the lowest LastTurnExplored
-            int oldestCellValue = 999;
-            Cell oldestCell = null;
-            foreach (var cell in cells)
-            {
-                if(cell.LastTurnExplored < oldestCellValue && !cell.IsLocked)
-                {
-                    oldestCellValue = cell.LastTurnExplored;
-                    oldestCell = cell;
-                }
-            }
-
-            List<Cell> rndCells = new List<Cell>();
-            foreach (var cell in cells)
-            {
-                if (cell.LastTurnExplored == oldestCellValue && !cell.IsLocked)
-                {
-                    rndCells.Add(cell);
-                }
-            }
-
-            rndCells.First().IsLocked = true;
-            Vector2 gridPosition = WorldToGridPosition(rndCells.First().Position);
-
-            // TODO : Foreach cells get their position and calculate distance
-            
-            foreach (var cell in cells)
-            {
-                cell.Debug();
-            }
-
-            return GridToWorldPosition(gridPosition);
+            return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
         }
-        
+
         public Vector2 GridToWorldPosition(Vector2 gridPosition)
         {
             Vector2 worldPosition = new Vector2();
@@ -445,8 +436,7 @@ namespace CodeBuster
             int aroundValue = 150;
             if ((worldPosition.X - aroundValue < busterPosition.X || busterPosition.X < worldPosition.X + aroundValue) && (worldPosition.Y - aroundValue < busterPosition.Y || busterPosition.Y < worldPosition.Y + aroundValue))
             {
-                cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
-                cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = turn;
+                MarkCellAsVisited(worldPosition, turn);
             }
         }
     }
@@ -455,8 +445,6 @@ namespace CodeBuster
 
 namespace CodeBuster
 {
-    // TODO : Give a Role class and the busters will get informations
-    // based on their roles
     class Brain
     {
         public bool TeamInitialized { get; set; }
@@ -480,6 +468,7 @@ namespace CodeBuster
 
             // Initialize map
             GridMap = new Map();
+            GridMap.Debug();
 
             // Initialize game infos
             if (TeamId == 0)
@@ -652,12 +641,6 @@ namespace CodeBuster
                 buster.TargetPosition = buster.Position;
             }
 
-            // Remove enemy chased reference if he's not visible anymore
-            if(buster.EnemyChased != null && !buster.EnemyChased.IsVisible)
-            {
-                buster.EnemyChased = null;
-            }
-
             // Update map with the position of the buster
             GridMap.UpdateMap(buster.Position, Turn);
         }
@@ -705,6 +688,7 @@ namespace CodeBuster
                 buster.GhostInRange = null;
                 buster.EnemyInRange = null;
                 buster.GhostCaptured = null;
+                buster.GotAnOrder = false;
             }
 
             foreach (Enemy enemy in Enemies)
@@ -787,7 +771,6 @@ namespace CodeBuster
             List<Tuple<int, int>> capturableGhosts = new List<Tuple<int, int>>();
             foreach (var ghost in Ghosts.FindAll(e => e.IsVisible == true))
             {
-                // If this ghost is not already captured
                 if (!CapturedGhost.Contains(ghost.EntityId))
                 {
                     int distanceToGhost = (int)Vector2.Distance(buster.Position, ghost.Position);
@@ -799,6 +782,24 @@ namespace CodeBuster
             }
 
             return capturableGhosts;
+        }
+
+        public List<Tuple<int, int>> GetCloseRangeGhosts(Buster buster)
+        {
+            List<Tuple<int, int>> ghostsInCloseRange = new List<Tuple<int, int>>();
+            foreach (var ghost in Ghosts.FindAll(e => e.IsVisible == true))
+            {
+                if (!CapturedGhost.Contains(ghost.EntityId))
+                {
+                    int distanceToGhost = (int)Vector2.Distance(buster.Position, ghost.Position);
+                    if (distanceToGhost < 900)
+                    {
+                        ghostsInCloseRange.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                    }
+                }
+            }
+
+            return ghostsInCloseRange;
         }
 
         public List<Tuple<int, int>> GetChasableGhosts(Buster buster)
@@ -852,8 +853,17 @@ namespace CodeBuster
         /// </summary>
         public void ComputeInformations()
         {
+            // First we check if our buster is already doing a task 
+            foreach (var buster in Busters)
+            {
+                if(buster.IsHoldingAGhost() || buster.IsStunned)
+                {
+                    buster.GotAnOrder = true;
+                }
+            }
+
             // Search a catchable ghost for each buster
-            foreach (var buster in Busters.FindAll(e => e.IsHoldingAGhost() == false && e.IsStunned == false))
+            foreach (var buster in Busters.FindAll(e => e.GotAnOrder == false))
             {
                 Player.print("Buster " + buster.EntityId + " search to capture");
                 
@@ -878,6 +888,7 @@ namespace CodeBuster
                             {
                                 // If we're the closest, we capture it
                                 buster.GhostInRange = foundGhost;
+                                buster.GotAnOrder = true;
                                 break;
                             }
                             else
@@ -887,6 +898,7 @@ namespace CodeBuster
                                 if (otherBuster.IsBusy())
                                 {
                                     buster.GhostInRange = foundGhost;
+                                    buster.GotAnOrder = true;
                                     break;
                                 }
                             }
@@ -897,10 +909,28 @@ namespace CodeBuster
                         break;
                     }
                 }
+
+                // If no ghost is easy to capture we want to check if we're not just too close from one
+                if (buster.GhostInRange == null)
+                {
+                    // TODO : Get all ghosts in too close distance ( < 600 ) and move in the opposite direction to the vector between the buster and the ghost to capture it at the next turn
+                    List<Tuple<int, int>> closeRangeGhosts = GetCloseRangeGhosts(buster);
+                    foreach (var ghost in closeRangeGhosts)
+                    {
+                        // Retrieve the actual ghost
+                        Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
+
+                        // DO THINGS PLEASE
+                        // 
+                        //
+                        //
+                        //
+                    }
+                }
             }
 
             // Second action if no capturable ghost : Chase an enemy or attack an enemy in range (if we can stun)
-            foreach (var buster in Busters.FindAll(e => e.IsHoldingAGhost() == false && e.GhostInRange == null && e.CanStun == true && e.IsStunned == false))
+            foreach (var buster in Busters.FindAll(e => e.GotAnOrder == false && e.CanStun == true))
             {
                 Player.print("Buster " + buster.EntityId + " search to chase");
                 // Find distance to all visible enemies carrying a ghost
@@ -924,6 +954,7 @@ namespace CodeBuster
                                 // If we're the closest, we chase them
                                 buster.EnemyChased = foundEnemy;
                                 buster.EnemyChased.Locked = true;
+                                buster.GotAnOrder = true;
                                 break;
                             }
                             else
@@ -934,6 +965,7 @@ namespace CodeBuster
                                 {
                                     buster.EnemyChased = foundEnemy;
                                     buster.EnemyChased.Locked = true;
+                                    buster.GotAnOrder = true;
                                     break;
                                 }
                             }
@@ -966,6 +998,7 @@ namespace CodeBuster
                                 // If we're the closest, we chase them
                                 buster.EnemyInRange = foundEnemy;
                                 buster.EnemyInRange.Locked = true;
+                                buster.GotAnOrder = true;
                                 break;
                             }
                             else
@@ -976,6 +1009,7 @@ namespace CodeBuster
                                 {
                                     buster.EnemyInRange = foundEnemy;
                                     buster.EnemyInRange.Locked = true;
+                                    buster.GotAnOrder = true;
                                     break;
                                 }
                                 else
@@ -994,12 +1028,13 @@ namespace CodeBuster
                     if (distanceToEnemy < 1760)
                     {
                         buster.EnemyInRange = buster.EnemyChased;
+                        buster.GotAnOrder = true;
                     }
                 }
             }
 
             // If no enemy in range: Get a ghost to chase
-            foreach (var buster in Busters.FindAll(e => e.IsHoldingAGhost() == false && e.GhostInRange == null && e.EnemyChased == null && e.EnemyInRange == null && e.IsStunned == false))
+            foreach (var buster in Busters.FindAll(e => e.GotAnOrder == false))
             {
                 Player.print("Buster " + buster.EntityId + " search to chase a ghost");
                 // Fourth action if no enemy in range : Chase a ghost
@@ -1027,6 +1062,7 @@ namespace CodeBuster
                                     // If we're the closest, we chase them
                                     buster.GhostChased = foundGhost;
                                     buster.GhostChased.Locked = true;
+                                    buster.GotAnOrder = true;
                                     break;
                                 }
                                 else
@@ -1037,6 +1073,7 @@ namespace CodeBuster
                                     {
                                         buster.GhostChased = foundGhost;
                                         buster.GhostChased.Locked = true;
+                                        buster.GotAnOrder = true;
                                         break;
                                     }
                                     else

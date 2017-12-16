@@ -21,12 +21,13 @@ TODO :
 	- Intégrer stun
 		° [X] Classe Enemy pour stocker les ennemis et savoir si ils sont visibles et à portée
 		° [X] Stun becomes a priority if the enemy has a ghost
-		° [] Ne pas essayer de stun un ennemi déjà visé dans ce tour-ci
+		° [X] Ne pas essayer de stun un ennemi déjà visé dans ce tour-ci
+
 	- [X] - Hardcodé pour prioriser - Ajouter découverte de la carte (map séparée en carrés et exploration suivant quand la case a été explorée la dernière fois)
 	- [ ] - Vérifier lors de la capture si un ennemi capture le fantôme aussi et rester dessus au besoin (et appelle le buster libre le plus proche pour le capturer à 2)
 	- [X] - Prise en compte de la règle d'endurance des fantômes (ajout dans la class Ghost et dans la lecture des infos de jeu)
 
 	- [ ] - Lorsque l'on récupère les fantômes à portée, vérifier la vie et si on connait des fantômes avec moins de vie aller les chercher
 			Les fantômes ont une endurance pouvant être [3, 15, 40]
-	- [ ] - Si un buster capture un fantôme avec 40 de vie et qu'un buster
-	- [ ] - Si un buster vient de se faire stun avec un fantôme 
+
+	- [] - 

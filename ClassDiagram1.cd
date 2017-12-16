@@ -1,42 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="CodeBuster.Buster">
-    <Position X="13.5" Y="3.25" Width="2" />
+    <Position X="12.25" Y="3.75" Width="2" />
     <TypeIdentifier>
-      <HashCode>AAEAEAEIGAAAAKEAIAAAABBQCAAAQABQAAAEBAQoEAE=</HashCode>
+      <HashCode>AAEAEAkIGAAAAKEAIAAAABBQCAAAQABQAAAEBAQoEAE=</HashCode>
       <FileName>Entities\Buster.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Enemy">
-    <Position X="11" Y="3.25" Width="1.75" />
+    <Position X="9.75" Y="3.75" Width="1.75" />
     <TypeIdentifier>
       <HashCode>CAAAAAAoAAAAAIAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Entities\Enemy.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Entity">
-    <Position X="13.75" Y="0.5" Width="1.5" />
+    <Position X="12.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAIAEIAgAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Entities\Entity.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Ghost">
-    <Position X="15.75" Y="3.25" Width="2.25" />
+    <Position X="14.5" Y="3.75" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAgAAAAAIEAAQAAAAAAgAAAAAAAAAAAAAABAAA=</HashCode>
       <FileName>Entities\Ghost.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Cell" Collapsed="true">
-    <Position X="2.25" Y="4.75" Width="1.5" />
+    <Position X="2.25" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAACAAAAQAAAIAgAAAAAAAAAAAAAAAAAAAAAAAAAAE=</HashCode>
       <FileName>Helpers\Cell.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Map">
-    <Position X="4.5" Y="4.25" Width="2.25" />
+    <Position X="4.5" Y="7" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAEgAAAEAsAAQAAAACACAgAAgAAAECAAAggAAQQ=</HashCode>
       <FileName>Helpers\Map.cs</FileName>
@@ -46,20 +46,20 @@
     </ShowAsAssociation>
   </Class>
   <Class Name="CodeBuster.Brain">
-    <Position X="7.25" Y="4.25" Width="2.75" />
+    <Position X="18.25" Y="0.5" Width="2.75" />
     <TypeIdentifier>
-      <HashCode>AAAAA8BAgCAAAKAAABACQAACAAEQQCTAACIGAIACAAA=</HashCode>
+      <HashCode>AAAAA8BAgCAAAKAAABACQAACAAEQQiTAACIGAIACAAA=</HashCode>
       <FileName>MAS\Brain.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.Player">
-    <Position X="0.5" Y="4.25" Width="1.5" />
+    <Position X="0.5" Y="7" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>MAS\Player.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="CodeBuster.BusterState" Collapsed="true">
+  <Class Name="CodeBuster.BusterState">
     <Position X="3.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQAAgAAAAAAACAAABAAEAAACAAEAAAAAAAAAAAAAAA=</HashCode>
@@ -67,28 +67,28 @@
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.CaptureState">
-    <Position X="2.75" Y="1.75" Width="1.5" />
+    <Position X="2.75" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQAAAAAAAAAACAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>States\CaptureState.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.MoveState">
-    <Position X="5" Y="1.75" Width="1.5" />
+    <Position X="5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQEAAAAAAAAACAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>States\MoveState.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.ReleaseState">
-    <Position X="7.25" Y="1.75" Width="1.5" />
+    <Position X="7.25" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQAAAAAAAAAACAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>States\ReleaseState.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CodeBuster.StunState">
-    <Position X="0.5" Y="1.75" Width="1.5" />
+    <Position X="0.5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAQAAAAAAAAAACAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>States\StunState.cs</FileName>
