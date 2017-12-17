@@ -53,22 +53,22 @@ namespace CodeBuster
             // Populate cells to explore with cells given by priority
             // Y, X
             // Level 1 priority
-            cellsToExplore.Add(0, new Vector2(2, 2));
+            cellsToExplore.Add(0, new Vector2(1, 2));
             cellsToExplore.Add(1, new Vector2(3, 1));
-            cellsToExplore.Add(2, new Vector2(1, 3));
-            cellsToExplore.Add(3, new Vector2(4, 0));
-            cellsToExplore.Add(4, new Vector2(5, 0));
-            cellsToExplore.Add(5, new Vector2(0, 3));
+            cellsToExplore.Add(2, new Vector2(2, 2));
+            cellsToExplore.Add(3, new Vector2(2, 3));
+            cellsToExplore.Add(4, new Vector2(1, 3));
+            cellsToExplore.Add(5, new Vector2(4, 0));
+            cellsToExplore.Add(6, new Vector2(5, 0));
+            cellsToExplore.Add(7, new Vector2(0, 3));
             // Level 2 priority 
-            cellsToExplore.Add(6, new Vector2(2, 0));
-            cellsToExplore.Add(7, new Vector2(3, 0));
-            cellsToExplore.Add(8, new Vector2(2, 1));
-            cellsToExplore.Add(9, new Vector2(4, 1));
-            cellsToExplore.Add(10, new Vector2(5, 1));
-            cellsToExplore.Add(11, new Vector2(0, 2));
-            cellsToExplore.Add(12, new Vector2(1, 2));
-            cellsToExplore.Add(13, new Vector2(3, 2));
-            cellsToExplore.Add(14, new Vector2(2, 3));
+            cellsToExplore.Add(8, new Vector2(2, 0));
+            cellsToExplore.Add(9, new Vector2(3, 0));
+            cellsToExplore.Add(10, new Vector2(2, 1));
+            cellsToExplore.Add(11, new Vector2(4, 1));
+            cellsToExplore.Add(12, new Vector2(5, 1));
+            cellsToExplore.Add(13, new Vector2(0, 2));
+            cellsToExplore.Add(14, new Vector2(3, 2));
             cellsToExplore.Add(15, new Vector2(3, 3));
             // Level 3 priority 
             cellsToExplore.Add(16, new Vector2(1, 0));
@@ -98,7 +98,7 @@ namespace CodeBuster
                 string row = "";
                 for (int j = 0; j < Columns; j++)
                 {
-                    row += j.ToString() + ":" + i.ToString() + " / " + cells[i, j].LastTurnExplored + " / "  + (cells[i, j].IsLocked ? "True  ": "False") + " |";
+                    row += j.ToString() + ":" + i.ToString() + " / " + cells[i, j].LastTurnExplored + " / "  + (cells[i, j].IsLocked ? "True ": "False") + " |";
                 }
                 Player.print(row);
             }
@@ -211,7 +211,7 @@ namespace CodeBuster
             Vector2 worldPosition = GridToWorldPosition(gridPosition);
 
             // If the buster is around the center of a cell, update it
-            int aroundValue = 150;
+            int aroundValue = 100;
             if ((worldPosition.X - aroundValue < busterPosition.X || busterPosition.X < worldPosition.X + aroundValue) && (worldPosition.Y - aroundValue < busterPosition.Y || busterPosition.Y < worldPosition.Y + aroundValue))
             {
                 MarkCellAsVisited(worldPosition, turn);

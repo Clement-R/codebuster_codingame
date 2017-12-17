@@ -21,7 +21,7 @@ namespace CodeBuster
         public new void Debug()
         {
             base.Debug();
-            Player.print("Captured : " + Captured + " / Locked : " + Locked + " / Life : " + Life);
+            Player.print("Captured : " + Captured + " / Locked : " + Locked + " / Life : " + Life + " / NumberOfBustersCapturing : " + NumberOfBustersCapturing);
         }
     }
 }

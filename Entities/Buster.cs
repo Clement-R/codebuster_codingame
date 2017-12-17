@@ -56,8 +56,6 @@ namespace CodeBuster
         {
             State.ComputeInformations(this);
 
-            Player.print(State.ToString());
-
             if (State != LastState)
             {
                 State.Enter(this);
@@ -113,7 +111,7 @@ namespace CodeBuster
 
         public new void Debug()
         {
-            Player.print("Buster " + EntityId + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / can stun : " + CanStun + " / last turn stun : " + LastTurnStun.ToString() + " / ghost chased : " + ((GhostChased != null) ? GhostChased.EntityId : -1) + " / ghost in range : " + ((GhostInRange != null) ? GhostInRange.EntityId : -1) + " / enemy chased : " + ((EnemyChased != null) ? EnemyChased.EntityId : -1) + " / enemy in range : " + ((EnemyInRange != null) ? EnemyInRange.EntityId : -1) + " / stunned : " + IsStunned + " / busy : " + IsBusy());
+            Player.print("Buster " + EntityId + " / state : " + State + " / position : " + Position.ToString() + " / target : " + TargetPosition.ToString() + " / can capture : " + CanCapture().ToString() + " / is holding : " + IsHoldingAGhost().ToString() + " / can release : " + CanRelease().ToString() + " / can attack : " + CanAttack().ToString() + " / can stun : " + CanStun + " / last turn stun : " + LastTurnStun.ToString() + " / ghost chased : " + ((GhostChased != null) ? GhostChased.EntityId : -1) + " / ghost in range : " + ((GhostInRange != null) ? GhostInRange.EntityId : -1) + " / enemy chased : " + ((EnemyChased != null) ? EnemyChased.EntityId : -1) + " / enemy in range : " + ((EnemyInRange != null) ? EnemyInRange.EntityId : -1) + " / stunned : " + IsStunned + " / busy : " + IsBusy());
         }
 
         public void MarkGhostAsCaptured()
