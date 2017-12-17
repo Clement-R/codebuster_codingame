@@ -184,12 +184,10 @@ namespace CodeBuster
 
             // Update its position
             buster.Position = position;
-            Player.print("Buster is at map position : " + GridMap.WorldToGridPosition(buster.Position));
 
             // Check for buster if they are in base range
             if (Vector2.Distance(buster.Position, BasePosition) <= 1600)
             {
-                Player.print("Buster " + buster.EntityId.ToString() + " is in drop zone");
                 buster.IsInDropZone = true;
             }
             else
@@ -600,28 +598,37 @@ namespace CodeBuster
             {
                 Player.print("Buster " + buster.EntityId + " search to chase a ghost");
                 // Fourth action if no enemy in range : Chase a ghost
-                if (buster.EnemyChased == null && buster.EnemyInRange == null)
+                // Search a ghost to chase
+                List<Tuple<int, int>> chasableGhosts = GetChasableGhosts(buster);
+                foreach (var ghost in chasableGhosts)
                 {
-                    // Search a ghost to chase
-                    List<Tuple<int, int>> chasableGhosts = GetChasableGhosts(buster);
-                    foreach (var ghost in chasableGhosts)
+                    // Retrieve the actual ghost
+                    Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
+
+                    // Do we already have found a ghost to chase ? If not we search
+                    if (buster.GhostChased == null)
                     {
-                        // Retrieve the actual ghost
-                        Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
-
-                        // Do we already have found a ghost to chase ? If not we search
-                        if (buster.GhostChased == null)
+                        // We get the distance between the ghost and all busters
+                        List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundGhost);
+                        foreach (var busterByDistance in bustersByDistance)
                         {
-                            // We get the distance between the enemy and all busters
-                            List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundGhost);
-                            foreach (var busterByDistance in bustersByDistance)
-                            {
-                                Player.print("Buster " + busterByDistance.Item1 + " - distance : " + busterByDistance.Item2 + " - busy : " + Busters.Find(e => e.EntityId == busterByDistance.Item1).IsBusy());
-                                int closestBusterId = busterByDistance.Item1;
+                            Player.print("Buster " + busterByDistance.Item1 + " - distance : " + busterByDistance.Item2 + " - busy : " + Busters.Find(e => e.EntityId == busterByDistance.Item1).IsBusy());
+                            int closestBusterId = busterByDistance.Item1;
 
-                                if (buster.EntityId == closestBusterId)
+                            if (buster.EntityId == closestBusterId)
+                            {
+                                // If we're the closest, we chase them
+                                buster.GhostChased = foundGhost;
+                                buster.GhostChased.Locked = true;
+                                buster.GotAnOrder = true;
+                                break;
+                            }
+                            else
+                            {
+                                // If we're not the closest, does the other buster is busy ?
+                                Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
+                                if (otherBuster.IsBusy())
                                 {
-                                    // If we're the closest, we chase them
                                     buster.GhostChased = foundGhost;
                                     buster.GhostChased.Locked = true;
                                     buster.GotAnOrder = true;
@@ -629,20 +636,8 @@ namespace CodeBuster
                                 }
                                 else
                                 {
-                                    // If we're not the closest, does the other buster is busy ?
-                                    Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
-                                    if (otherBuster.IsBusy())
-                                    {
-                                        buster.GhostChased = foundGhost;
-                                        buster.GhostChased.Locked = true;
-                                        buster.GotAnOrder = true;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        // The closest non-busy buster will chase this ghost
-                                        break;
-                                    }
+                                    // The closest non-busy buster will chase this ghost
+                                    break;
                                 }
                             }
                         }
@@ -779,7 +774,7 @@ namespace CodeBuster
                 buster.Debug();
             }
             Debug();
-            GridMap.Draw();
+            // GridMap.Draw();
             Player.print("-------------------------");
 
             foreach (var buster in Busters)

@@ -123,7 +123,7 @@ namespace CodeBuster
             cells[(int)gridPosition.Y, (int)gridPosition.X].IsLocked = false;
             cells[(int)gridPosition.Y, (int)gridPosition.X].LastTurnExplored = age;
 
-            Player.print("Cell " + gridPosition.Y + " " + gridPosition.X + " has been marked as visited on turn " + age.ToString());
+            // Player.print("Cell " + gridPosition.Y + " " + gridPosition.X + " has been marked as visited on turn " + age.ToString());
         }
 
         public int GetOldestCellValue()
@@ -131,7 +131,7 @@ namespace CodeBuster
             int minLastTurnExplored = 999;
             foreach (var cell in cells)
             {
-                if(cell.LastTurnExplored < minLastTurnExplored)
+                if(!cell.IsLocked && cell.LastTurnExplored < minLastTurnExplored)
                 {
                     minLastTurnExplored = cell.LastTurnExplored; 
                 }
@@ -166,7 +166,7 @@ namespace CodeBuster
 
         public Vector2 WorldToGridPosition(Vector2 position)
         {
-            return new Vector2((float)Math.Floor(position.X / DistanceBetweenColumns), (float)Math.Floor(position.Y / (float)DistanceBetweenRows));
+            return new Vector2((float)Math.Floor(((float)FirstRowPosition + position.X) / DistanceBetweenColumns), (float)Math.Floor(((float) FirstColumnPosition + position.Y) / (float)DistanceBetweenRows));
         }
 
         public Vector2 GridToWorldPosition(Vector2 gridPosition)
