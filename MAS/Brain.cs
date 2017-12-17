@@ -10,12 +10,15 @@ namespace CodeBuster
     class Brain
     {
         public bool TeamInitialized { get; set; }
-        public int TeamId { get; set; }
+        public int TeamId { get; }
+        public int NumberOfGhosts { get; }
         public List<Buster> Busters ;
         public List<Enemy> Enemies;
         public List<Ghost> Ghosts;
         public List<int> CapturedGhost;
         public Vector2 BasePosition;
+        public Vector2 EnemyBasePosition;
+        public Vector2 BlockerPosition;
         public Map GridMap;
         public int Turn { get; set; }
 
@@ -27,19 +30,25 @@ namespace CodeBuster
             Enemies = new List<Enemy>();
             CapturedGhost = new List<int>();
             TeamId = teamId;
+            NumberOfGhosts = numberOfGhosts;
 
             // Initialize map
             GridMap = new Map();
             GridMap.Debug();
 
             // Initialize game infos
+            // Initialize game infos
             if (TeamId == 0)
             {
                 BasePosition = new Vector2(0, 0);
+                EnemyBasePosition = new Vector2(16000, 9000);
+                BlockerPosition = new Vector2(13600, 7000);
             }
             else
             {
                 BasePosition = new Vector2(16000, 9000);
+                EnemyBasePosition = new Vector2(0, 0);
+                BlockerPosition = new Vector2(2000, 2000);
             }
         }
 
@@ -336,10 +345,12 @@ namespace CodeBuster
                     int distanceToGhost = (int)Vector2.Distance(buster.Position, ghost.Position);
                     if(distanceToGhost > 900 && distanceToGhost < 1760)
                     {
-                        capturableGhosts.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                        capturableGhosts.Add(new Tuple<int, int>(ghost.EntityId, ghost.Life));
                     }
                 }
             }
+
+            capturableGhosts = capturableGhosts.OrderBy(e => e.Item2).ToList();
 
             return capturableGhosts;
         }
@@ -365,13 +376,22 @@ namespace CodeBuster
         public List<Tuple<int, int>> GetChasableGhosts(Buster buster)
         {
             List<Tuple<int, int>> chasableGhosts = new List<Tuple<int, int>>();
-            foreach (var ghost in Ghosts.FindAll(e => e.Locked == false && e.IsVisible == true))
+            foreach (var ghost in Ghosts.FindAll(e => e.IsVisible == true))
             {
                 // If this ghost is not already captured
                 if (!CapturedGhost.Contains(ghost.EntityId))
                 {
                     int distanceToGhost = (int)Vector2.Distance(buster.Position, ghost.Position);
-                    chasableGhosts.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                    if((GetNumberOfGhostsCaptured() * 2) >= (int)Math.Floor((NumberOfGhosts / 4f) * 2))
+                    {
+                        // If half of the ghosts are captured we chase whatever we can
+                        chasableGhosts.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                    }
+                    else if (distanceToGhost < 6000 || ghost.Life <= 15)
+                    {
+                        // And we're not too far
+                        chasableGhosts.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                    }
                 }
             }
 
@@ -383,7 +403,7 @@ namespace CodeBuster
         public List<Tuple<int, int>> GetAllVisibleEnemiesCarrying(Buster buster)
         {
             List<Tuple<int, int>> attackableEnemies = new List<Tuple<int, int>>();
-            foreach (var enemy in Enemies.FindAll(e => e.IsCarryingAGhost == true && e.IsVisible == true && e.Locked == false))
+            foreach (var enemy in Enemies.FindAll(e => e.IsCarryingAGhost == true && e.IsVisible == true))
             {
                 int distanceToEnemy = (int)Vector2.Distance(buster.Position, enemy.Position);
                 attackableEnemies.Add(new Tuple<int, int>(enemy.EntityId, distanceToEnemy));
@@ -392,10 +412,50 @@ namespace CodeBuster
             return attackableEnemies;
         }
 
+        public List<Tuple<int, int>> GetInRangeEnemiesCarrying(Buster buster)
+        {
+            List<Tuple<int, int>> attackableEnemies = new List<Tuple<int, int>>();
+            foreach (var enemy in Enemies.FindAll(e => e.IsCarryingAGhost == true && e.IsVisible == true))
+            {
+                int distanceToEnemy = (int)Vector2.Distance(buster.Position, enemy.Position);
+                if(distanceToEnemy < 1760)
+                {
+                    attackableEnemies.Add(new Tuple<int, int>(enemy.EntityId, distanceToEnemy));
+                }
+            }
+
+            attackableEnemies = attackableEnemies.OrderBy(e => e.Item2).ToList();
+
+            return attackableEnemies;
+        }
+
+        public int GetNumberOfAllyCapturing(Buster busterAsking, Ghost ghost)
+        {
+            int number = 0;
+            foreach (var buster in Busters.FindAll(e => e.EntityId != busterAsking.EntityId))
+            {
+                if (buster.GhostInRange != null && buster.GhostInRange.EntityId == ghost.EntityId)
+                {
+                    number++;
+                }
+            }
+            return number;
+        }
+
+        public int GetNumberOfGhostsCaptured()
+        {
+            int i = 0;
+            foreach (var buster in Busters)
+            {
+                if(buster.GhostCaptured != null) { i++; }
+            }
+            return CapturedGhost.Count + i;
+        }
+
         public List<Tuple<int, int>> GetAttackableEnemies(Buster buster)
         {
             List<Tuple<int, int>> attackableEnemies = new List<Tuple<int, int>>();
-            foreach (var enemy in Enemies.FindAll(e => e.Locked == false && e.IsVisible == true))
+            foreach (var enemy in Enemies.FindAll(e => e.IsVisible == true))
             {
                 // If this ghost is not already captured
                 int distanceToEnemy = (int)Vector2.Distance(buster.Position, enemy.Position);
@@ -421,6 +481,55 @@ namespace CodeBuster
                     buster.GotAnOrder = true;
                 }
             }
+            
+            foreach (var buster in Busters)
+            {
+                Player.print("Buster " + buster.EntityId + " search to chase");
+                // Find distance to all visible enemies carrying a ghost
+                List<Tuple<int, int>> enemiesInRange = GetInRangeEnemiesCarrying(buster);
+                foreach (var enemy in enemiesInRange)
+                {
+                    // Retrieve the actual enemy
+                    Enemy foundEnemy = Enemies.Find(e => e.EntityId == enemy.Item1);
+
+                    // Do we already have found an enemy to chase ? If not we search
+                    if (buster.EnemyChased == null)
+                    {
+                        // We get the distance between the enemy and all busters
+                        List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundEnemy);
+                        foreach (var busterByDistance in bustersByDistance)
+                        {
+                            int closestBusterId = busterByDistance.Item1;
+
+                            if (closestBusterId == buster.EntityId)
+                            {
+                                // If we're the closest, we chase them
+                                buster.EnemyChased = foundEnemy;
+                                // buster.EnemyChased.Locked = true;
+                                buster.GotAnOrder = true;
+                                break;
+                            }
+                            else
+                            {
+                                // If we're not the closest, does the other buster is busy ?
+                                Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
+                                if (otherBuster.IsBusy())
+                                {
+                                    buster.EnemyChased = foundEnemy;
+                                    // buster.EnemyChased.Locked = true;
+                                    buster.GotAnOrder = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
 
             // Search a catchable ghost for each buster
             foreach (var buster in Busters.FindAll(e => e.GotAnOrder == false))
@@ -443,6 +552,7 @@ namespace CodeBuster
                         foreach (var busterByDistance in bustersByDistance)
                         {
                             int closestBusterId = busterByDistance.Item1;
+                            Player.print("Closest buster is " + closestBusterId);
 
                             if (closestBusterId == buster.EntityId)
                             {
@@ -479,12 +589,20 @@ namespace CodeBuster
                     {
                         // Retrieve the actual ghost
                         Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
-
-                        // Just wait one turn
-                        if(!foundGhost.Locked)
+                        
+                        Vector2 direction = foundGhost.Position - buster.Position;
+                        if(direction.Length() <= 100f)
                         {
-                            buster.GotAnOrder = true;
+                            Vector2 newPosition = new Vector2(buster.Position.X - 800, buster.Position.Y - 800);
+                            buster.TargetPosition = new Vector2((int)newPosition.X, (int)newPosition.Y);
                         }
+                        else
+                        {
+                            Vector2 newPosition = buster.Position + Vector2.Normalize(direction) * 400;
+                            buster.TargetPosition = new Vector2((int)newPosition.X, (int)newPosition.Y);
+                        }
+                        buster.GotAnOrder = true;
+                        Player.print("Too close, moving");
                     }
                 }
             }
@@ -513,7 +631,7 @@ namespace CodeBuster
                             {
                                 // If we're the closest, we chase them
                                 buster.EnemyChased = foundEnemy;
-                                buster.EnemyChased.Locked = true;
+                                // buster.EnemyChased.Locked = true;
                                 buster.GotAnOrder = true;
                                 break;
                             }
@@ -524,7 +642,7 @@ namespace CodeBuster
                                 if (otherBuster.IsBusy())
                                 {
                                     buster.EnemyChased = foundEnemy;
-                                    buster.EnemyChased.Locked = true;
+                                    // buster.EnemyChased.Locked = true;
                                     buster.GotAnOrder = true;
                                     break;
                                 }
@@ -540,42 +658,46 @@ namespace CodeBuster
                 // Third action if no enemy with a ghost : Attack a close enemy
                 if (buster.EnemyChased == null)
                 {
-                    Player.print("Buster " + buster.EntityId + " search an enemy to attack");
-                    // Find all enemies in range
-                    enemiesInRange = GetAttackableEnemies(buster);
-                    foreach (var enemy in enemiesInRange)
+                    // if there is 25% left or less of ghosts we stop stunning and keep for an enemy thay carry
+                    if((GetNumberOfGhostsCaptured() * 2) <= (int)Math.Floor((NumberOfGhosts / 4f) * 3))
                     {
-                        // Retrieve the actual enemy
-                        Enemy foundEnemy = Enemies.Find(e => e.EntityId == enemy.Item1);
-                        // Get the distance between this enemy and all busters
-                        List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundEnemy);
-                        foreach (var busterByDistance in bustersByDistance)
+                        Player.print("Buster " + buster.EntityId + " search an enemy to attack");
+                        // Find all enemies in range
+                        enemiesInRange = GetAttackableEnemies(buster);
+                        foreach (var enemy in enemiesInRange)
                         {
-                            int closestBusterId = busterByDistance.Item1;
+                            // Retrieve the actual enemy
+                            Enemy foundEnemy = Enemies.Find(e => e.EntityId == enemy.Item1);
+                            // Get the distance between this enemy and all busters
+                            List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundEnemy);
+                            foreach (var busterByDistance in bustersByDistance)
+                            {
+                                int closestBusterId = busterByDistance.Item1;
 
-                            if (closestBusterId == buster.EntityId)
-                            {
-                                // If we're the closest, we chase them
-                                buster.EnemyInRange = foundEnemy;
-                                buster.EnemyInRange.Locked = true;
-                                buster.GotAnOrder = true;
-                                break;
-                            }
-                            else
-                            {
-                                // If we're not the closest, does the other buster is busy ?
-                                Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
-                                if (otherBuster.IsBusy())
+                                if (closestBusterId == buster.EntityId)
                                 {
+                                    // If we're the closest, we chase them
                                     buster.EnemyInRange = foundEnemy;
-                                    buster.EnemyInRange.Locked = true;
+                                    // buster.EnemyInRange.Locked = true;
                                     buster.GotAnOrder = true;
                                     break;
                                 }
                                 else
                                 {
-                                    // The closest non-busy buster will chase this enemy
-                                    break;
+                                    // If we're not the closest, does the other buster is busy ?
+                                    Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
+                                    if (otherBuster.IsBusy())
+                                    {
+                                        buster.EnemyInRange = foundEnemy;
+                                        //buster.EnemyInRange.Locked = true;
+                                        buster.GotAnOrder = true;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        // The closest non-busy buster will chase this enemy
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -619,7 +741,6 @@ namespace CodeBuster
                             {
                                 // If we're the closest, we chase them
                                 buster.GhostChased = foundGhost;
-                                buster.GhostChased.Locked = true;
                                 buster.GotAnOrder = true;
                                 break;
                             }
@@ -630,7 +751,6 @@ namespace CodeBuster
                                 if (otherBuster.IsBusy())
                                 {
                                     buster.GhostChased = foundGhost;
-                                    buster.GhostChased.Locked = true;
                                     buster.GotAnOrder = true;
                                     break;
                                 }
@@ -643,6 +763,122 @@ namespace CodeBuster
                         }
                     }
                 }
+            }
+
+            foreach (var buster in Busters)
+            {
+                // If we're getting in a brawl where N of our busters and N+1 of enemy busters are capturing, we stun one of them
+                if (buster.State == BusterState.MoveState && buster.GhostInRange != null)
+                {
+                    Player.print("Analysing a brawl");
+                    int num = GetNumberOfAllyCapturing(buster, buster.GhostInRange);
+                    if ((buster.GhostInRange.NumberOfBustersCapturing - num) == (num + 1) && buster.CanStun)
+                    {
+                        // Find all enemies in range
+                        List<Tuple<int, int>> enemiesInRange = GetAttackableEnemies(buster);
+
+                        if (enemiesInRange.Count > 0)
+                        {
+                            Enemy foundEnemy = Enemies.Find(e => e.EntityId == enemiesInRange.First().Item1);
+                            Player.print("Not this time !");
+                            buster.GhostInRange = null;
+                            buster.EnemyInRange = foundEnemy;
+                            buster.GotAnOrder = true;
+                        }
+                    }
+                }
+
+                // Experiment one new role : Blocker
+                //if (buster.Role == "Blocker" && !buster.IsStunned)
+                //{
+                //    // If around 75% of the ghosts are captured, we go and camp the enemy base
+                //    if ((GetNumberOfGhostsCaptured() * 2) >= (int)Math.Floor((NumberOfGhosts / 4f) * 3))
+                //    {
+                //        Player.print("I'M A BLOCKER");
+                //        // We detect an enemy not carrying ? Ignore
+                //        if ((buster.EnemyChased != null && !buster.EnemyChased.IsCarryingAGhost) || (buster.EnemyInRange != null && !buster.EnemyInRange.IsCarryingAGhost))
+                //        {
+                //            buster.EnemyInRange = null;
+                //            buster.TargetPosition = BlockerPosition;
+                //            buster.GotAnOrder = true;
+                //        }
+                //        else
+                //        {
+                //            // If the enemy is not in range, but we know his direction and can predict if we could stun him on next turn
+                //            if (buster.EnemyChased != null)
+                //            {
+                //                Vector2 direction = EnemyBasePosition - buster.EnemyChased.Position;
+                //                Vector2 nextEnemyPosition = buster.EnemyChased.Position + (Vector2.Normalize(direction) * 800);
+                //                Player.print("Next enemy position must be : " + nextEnemyPosition);
+
+                //                if (Vector2.Distance(nextEnemyPosition, buster.Position) < 1700)
+                //                {
+                //                    buster.EnemyInRange = buster.EnemyChased;
+                //                    buster.EnemyChased = null;
+                //                    buster.GotAnOrder = true;
+                //                }
+                //            }
+                //        }
+
+                //        if (buster.EnemyChased == null && buster.EnemyInRange == null)
+                //        {
+
+                //            if(buster.GhostCaptured != null)
+                //            {
+                //                // I'm running away !
+                //                buster.GotAnOrder = true;
+                //            }
+                //            else
+                //            {
+                //                // We've stunned an enemy, get the ghost and run away
+                //                List<Tuple<int, int>> ghostsInRange = GetCapturableGhosts(buster);
+                //                foreach (var ghost in ghostsInRange)
+                //                {
+                //                    // Retrieve the actual ghost
+                //                    Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
+                //                    // Do we already have found a ghost to capture ? If not we search
+                //                    if (buster.GhostInRange == null)
+                //                    {
+                //                        buster.GhostInRange = foundGhost;
+                //                        buster.GotAnOrder = true;
+                //                        break;
+                //                    }
+                //                }
+
+                //                if (buster.GhostInRange == null)
+                //                {
+                //                    ghostsInRange = GetChasableGhosts(buster);
+                //                    foreach (var ghost in ghostsInRange)
+                //                    {
+                //                        // Retrieve the actual ghost
+                //                        Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
+                //                        // Do we already have found a ghost to capture ? If not we search
+                //                        if (buster.GhostInRange == null)
+                //                        {
+                //                            buster.GhostChased = foundGhost;
+                //                            buster.GotAnOrder = true;
+                //                            break;
+                //                        }
+                //                    }
+                //                }
+                //            }
+
+                //            if (buster.Position == BlockerPosition && !buster.GotAnOrder)
+                //            {
+                //                buster.TargetPosition = new Vector2(BlockerPosition.X, BlockerPosition.Y - 50);
+                //                buster.GotAnOrder = true;
+                //            }
+                //            else
+                //            {
+                //                buster.EnemyInRange = null;
+                //                buster.GhostInRange = null;
+                //                buster.GhostChased = null;
+                //                buster.TargetPosition = BlockerPosition;
+                //                buster.GotAnOrder = true;
+                //            }
+                //        }
+                //    }
+                //}
             }
 
             // The buster use all the informations given by the brain to take a decision
@@ -674,7 +910,7 @@ namespace CodeBuster
                 }
 
                 // If the buster is moving but not chasing something and not going to release a ghost, then he's actually scouting
-                if (buster.EnemyChased == null && buster.GhostChased == null && buster.State == BusterState.MoveState && !buster.IsHoldingAGhost())
+                if (buster.EnemyChased == null && buster.GhostChased == null && buster.State == BusterState.MoveState && !buster.IsHoldingAGhost() && !buster.GotAnOrder)
                 {
                     Player.print("Buster " + buster.EntityId + " is scouting " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                     buster.IsScouting = true;

@@ -53,22 +53,22 @@ namespace CodeBuster
             // Populate cells to explore with cells given by priority
             // Y, X
             // Level 1 priority
-            cellsToExplore.Add(0, new Vector2(2, 2));
+            cellsToExplore.Add(0, new Vector2(1, 2));
             cellsToExplore.Add(1, new Vector2(3, 1));
-            cellsToExplore.Add(2, new Vector2(1, 3));
-            cellsToExplore.Add(3, new Vector2(4, 0));
-            cellsToExplore.Add(4, new Vector2(5, 0));
-            cellsToExplore.Add(5, new Vector2(0, 3));
+            cellsToExplore.Add(2, new Vector2(2, 2));
+            cellsToExplore.Add(3, new Vector2(2, 3));
+            cellsToExplore.Add(4, new Vector2(1, 3));
+            cellsToExplore.Add(5, new Vector2(4, 0));
+            cellsToExplore.Add(6, new Vector2(5, 0));
+            cellsToExplore.Add(7, new Vector2(0, 3));
             // Level 2 priority 
-            cellsToExplore.Add(6, new Vector2(2, 0));
-            cellsToExplore.Add(7, new Vector2(3, 0));
-            cellsToExplore.Add(8, new Vector2(2, 1));
-            cellsToExplore.Add(9, new Vector2(4, 1));
-            cellsToExplore.Add(10, new Vector2(5, 1));
-            cellsToExplore.Add(11, new Vector2(0, 2));
-            cellsToExplore.Add(12, new Vector2(1, 2));
-            cellsToExplore.Add(13, new Vector2(3, 2));
-            cellsToExplore.Add(14, new Vector2(2, 3));
+            cellsToExplore.Add(8, new Vector2(2, 0));
+            cellsToExplore.Add(9, new Vector2(3, 0));
+            cellsToExplore.Add(10, new Vector2(2, 1));
+            cellsToExplore.Add(11, new Vector2(4, 1));
+            cellsToExplore.Add(12, new Vector2(5, 1));
+            cellsToExplore.Add(13, new Vector2(0, 2));
+            cellsToExplore.Add(14, new Vector2(3, 2));
             cellsToExplore.Add(15, new Vector2(3, 3));
             // Level 3 priority 
             cellsToExplore.Add(16, new Vector2(1, 0));
@@ -126,35 +126,46 @@ namespace CodeBuster
             // Player.print("Cell " + gridPosition.Y + " " + gridPosition.X + " has been marked as visited on turn " + age.ToString());
         }
 
-        public int GetOldestCellValue()
+        public List<int> GetOldestCellValues()
         {
-            int minLastTurnExplored = 999;
+            List<int> oldestCellValues = new List<int>();
+
             foreach (var cell in cells)
             {
-                if(!cell.IsLocked && cell.LastTurnExplored < minLastTurnExplored)
+                if (!cell.IsLocked && !oldestCellValues.Contains(cell.LastTurnExplored))
                 {
-                    minLastTurnExplored = cell.LastTurnExplored; 
+                    oldestCellValues.Add(cell.LastTurnExplored);
                 }
             }
 
-            return minLastTurnExplored;
+            oldestCellValues.Sort();
+
+            return oldestCellValues;
         }
 
         public Vector2 GetNextCell()
         {
             Cell nextCell = null;
-            // We search the cell that has the lowest LastTurnExplored value
-            int minLastTurnExplored = GetOldestCellValue();
-            Player.print("Minimum LastTurnExplored : " + minLastTurnExplored);
-            for (int i = 0; i < cellsToExplore.Count; i++)
+            // We search a list of old values in ascending order
+            foreach (var oldValue in GetOldestCellValues())
             {
-                Vector2 cell = (Vector2) cellsToExplore.GetByIndex(i);
-                Cell cellFound = cells[(int)cell.Y, (int)cell.X];
-                // If the actual cell has the same LastTurnExplored value we return it
-                if (cellFound.LastTurnExplored == minLastTurnExplored && !cellFound.IsLocked)
+                Player.print("LastTurnExplored value : " + oldValue);
+                for (int i = 0; i < cellsToExplore.Count; i++)
                 {
-                    Player.print("Cell found : " + cellFound.Position);
-                    nextCell = cellFound;
+                    Vector2 cell = (Vector2)cellsToExplore.GetByIndex(i);
+                    Cell cellFound = cells[(int)cell.Y, (int)cell.X];
+
+                    // If the actual cell has the same LastTurnExplored value we return it
+                    if (cellFound.LastTurnExplored == oldValue && !cellFound.IsLocked)
+                    {
+                        Player.print("Cell found : " + cellFound.Position);
+                        nextCell = cellFound;
+                        break;
+                    }
+                }
+
+                if (nextCell != null)
+                {
                     break;
                 }
             }
