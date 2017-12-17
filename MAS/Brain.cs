@@ -174,9 +174,9 @@ namespace CodeBuster
                     buster.GhostCaptured = null;
                     buster.GhostChased = null;
                     buster.EnemyChased = null;
-                    buster.TargetPosition = buster.Position;
                     StopScouting(buster);
-
+                    buster.TargetPosition = buster.Position;
+                    
                     buster.IsStunned = true;
                     
                     break;
@@ -255,6 +255,7 @@ namespace CodeBuster
             {
                 enemy.IsVisible = false;
                 enemy.Locked = false;
+                enemy.RemainingStunTurns = -1;
             }
 
             Turn++;
@@ -750,7 +751,7 @@ namespace CodeBuster
                     if (buster.IsScouting)
                     {
                         // If I was scouting and I now have a new order, I cancel my scout order
-                        Player.print("Buster " + buster.EntityId + " stop scouting");
+                        Player.print("Buster " + buster.EntityId + " stop scouting - " + buster.TargetPosition);
                         if (buster.GhostChased != null)
                         {
                             Player.print("Buster " + buster.EntityId + " stop scouting and start chasing ghost " + buster.GhostChased.EntityId);
@@ -759,6 +760,15 @@ namespace CodeBuster
                         {
                             Player.print("Buster " + buster.EntityId + " stop scouting and start chasing enemy " + buster.EnemyChased.EntityId);
                         }
+                        else if (buster.EnemyInRange != null)
+                        {
+                            Player.print("Buster " + buster.EntityId + " stop scouting and start attacking enemy " + buster.EnemyInRange.EntityId);
+                        }
+                        else if (buster.GhostInRange != null)
+                        {
+                            Player.print("Buster " + buster.EntityId + " stop scouting and start capturing ghost" + buster.GhostInRange.EntityId);
+                        }
+
                         StopScouting(buster);
                     }
                     else if(buster.EnemyChased != null)
@@ -766,12 +776,12 @@ namespace CodeBuster
                         // I wasn't scouting but chasing an enemy
                         Player.print("Buster " + buster.EntityId + " continue chasing enemy " + buster.EnemyChased.EntityId);
                         // If I'm chasing an enemy and he's not visible anymore or there is nothing at his position, we cancel and scout
-                        if (buster.TargetPosition == buster.EnemyChased.Position || !buster.EnemyChased.IsVisible)
+                        if (buster.TargetPosition == buster.EnemyChased.Position || !buster.EnemyChased.IsVisible || buster.EnemyChased.RemainingStunTurns == -1)
                         {
                             buster.EnemyChased = null;
                             buster.IsScouting = true;
-                            Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                             buster.TargetPosition = GetNextPosition(buster);
+                            Player.print("Buster " + buster.EntityId + " is taking a new scout target " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                         }
                     }
                     else if(buster.GhostChased != null)
@@ -783,8 +793,8 @@ namespace CodeBuster
                         {
                             buster.GhostChased = null;
                             buster.IsScouting = true;
-                            Player.print("Buster " + buster.EntityId + " is taking a new scout target");
                             buster.TargetPosition = GetNextPosition(buster);
+                            Player.print("Buster " + buster.EntityId + " is taking a new scout target " + GridMap.WorldToGridPosition(buster.TargetPosition).ToString());
                         }
                     }
                 }
@@ -839,7 +849,7 @@ namespace CodeBuster
             //Player.print("-------------------------");
             foreach (var buster in Busters)
             {
-                // buster.Debug();
+                buster.Debug();
             }
             // Debug();
             GridMap.Draw();
