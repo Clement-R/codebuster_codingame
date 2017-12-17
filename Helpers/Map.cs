@@ -98,7 +98,7 @@ namespace CodeBuster
                 string row = "";
                 for (int j = 0; j < Columns; j++)
                 {
-                    row += j.ToString() + ":" + i.ToString() + " / " + cells[i, j].LastTurnExplored + " / "  + (cells[i, j].IsLocked ? "True ": "False") + " |";
+                    row += j.ToString() + ":" + i.ToString() + " / " + cells[i, j].LastTurnExplored + " / "  + (cells[i, j].IsLocked ? "True  ": "False") + " |";
                 }
                 Player.print(row);
             }
@@ -129,10 +129,10 @@ namespace CodeBuster
         public List<int> GetOldestCellValues()
         {
             List<int> oldestCellValues = new List<int>();
-            
+
             foreach (var cell in cells)
             {
-                if(!cell.IsLocked && !oldestCellValues.Contains(cell.LastTurnExplored))
+                if (!cell.IsLocked && !oldestCellValues.Contains(cell.LastTurnExplored))
                 {
                     oldestCellValues.Add(cell.LastTurnExplored);
                 }
@@ -164,12 +164,12 @@ namespace CodeBuster
                     }
                 }
 
-                if(nextCell != null)
+                if (nextCell != null)
                 {
                     break;
                 }
             }
-            
+
             // Lock cell and return its position
             nextCell.IsLocked = true;
             return nextCell.Position;
@@ -211,7 +211,7 @@ namespace CodeBuster
             Vector2 worldPosition = GridToWorldPosition(gridPosition);
 
             // If the buster is around the center of a cell, update it
-            int aroundValue = 100;
+            int aroundValue = 150;
             if ((worldPosition.X - aroundValue < busterPosition.X || busterPosition.X < worldPosition.X + aroundValue) && (worldPosition.Y - aroundValue < busterPosition.Y || busterPosition.Y < worldPosition.Y + aroundValue))
             {
                 MarkCellAsVisited(worldPosition, turn);
