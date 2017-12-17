@@ -337,10 +337,12 @@ namespace CodeBuster
                     int distanceToGhost = (int)Vector2.Distance(buster.Position, ghost.Position);
                     if(distanceToGhost > 900 && distanceToGhost < 1760)
                     {
-                        capturableGhosts.Add(new Tuple<int, int>(ghost.EntityId, distanceToGhost));
+                        capturableGhosts.Add(new Tuple<int, int>(ghost.EntityId, ghost.Life));
                     }
                 }
             }
+
+            capturableGhosts = capturableGhosts.OrderBy(e => e.Item2).ToList();
 
             return capturableGhosts;
         }
@@ -446,44 +448,17 @@ namespace CodeBuster
                 Player.print("Buster " + buster.EntityId + " search to capture");
                 
                 // First action : Try to capture a ghost
-                // We retrieve all ghosts in capture range
+                // We retrieve all ghosts in capture range ordered by ascending life remaining
                 List<Tuple<int, int>> ghostsInRange = GetCapturableGhosts(buster);
                 foreach (var ghost in ghostsInRange)
                 {
                     // Retrieve the actual ghost
                     Ghost foundGhost = Ghosts.Find(e => e.EntityId == ghost.Item1);
-
                     // Do we already have found a ghost to capture ? If not we search
                     if (buster.GhostInRange == null)
                     {
-                        // We get the distance between the ghost and all busters
-                        List<Tuple<int, int>> bustersByDistance = GetDistanceToBusters(foundGhost);
-                        foreach (var busterByDistance in bustersByDistance)
-                        {
-                            int closestBusterId = busterByDistance.Item1;
-
-                            if (closestBusterId == buster.EntityId)
-                            {
-                                // If we're the closest, we capture it
-                                buster.GhostInRange = foundGhost;
-                                buster.GotAnOrder = true;
-                                break;
-                            }
-                            else
-                            {
-                                // If we're not the closest, does the other buster is busy ?
-                                Buster otherBuster = Busters.Find(e => e.EntityId == closestBusterId);
-                                if (otherBuster.IsBusy())
-                                {
-                                    buster.GhostInRange = foundGhost;
-                                    buster.GotAnOrder = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
+                        buster.GhostInRange = foundGhost;
+                        buster.GotAnOrder = true;
                         break;
                     }
                 }
