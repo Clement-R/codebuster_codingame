@@ -126,39 +126,50 @@ namespace CodeBuster
             // Player.print("Cell " + gridPosition.Y + " " + gridPosition.X + " has been marked as visited on turn " + age.ToString());
         }
 
-        public int GetOldestCellValue()
+        public List<int> GetOldestCellValues()
         {
-            int minLastTurnExplored = 999;
+            List<int> oldestCellValues = new List<int>();
+            
             foreach (var cell in cells)
             {
-                if(!cell.IsLocked && cell.LastTurnExplored < minLastTurnExplored)
+                if(!cell.IsLocked && !oldestCellValues.Contains(cell.LastTurnExplored))
                 {
-                    minLastTurnExplored = cell.LastTurnExplored; 
+                    oldestCellValues.Add(cell.LastTurnExplored);
                 }
             }
 
-            return minLastTurnExplored;
+            oldestCellValues.Sort();
+
+            return oldestCellValues;
         }
 
         public Vector2 GetNextCell()
         {
             Cell nextCell = null;
-            // We search the cell that has the lowest LastTurnExplored value
-            int minLastTurnExplored = GetOldestCellValue();
-            Player.print("Minimum LastTurnExplored : " + minLastTurnExplored);
-            for (int i = 0; i < cellsToExplore.Count; i++)
+            // We search a list of old values in ascending order
+            foreach (var oldValue in GetOldestCellValues())
             {
-                Vector2 cell = (Vector2) cellsToExplore.GetByIndex(i);
-                Cell cellFound = cells[(int)cell.Y, (int)cell.X];
-                // If the actual cell has the same LastTurnExplored value we return it
-                if (cellFound.LastTurnExplored == minLastTurnExplored && !cellFound.IsLocked)
+                Player.print("LastTurnExplored value : " + oldValue);
+                for (int i = 0; i < cellsToExplore.Count; i++)
                 {
-                    Player.print("Cell found : " + cellFound.Position);
-                    nextCell = cellFound;
+                    Vector2 cell = (Vector2)cellsToExplore.GetByIndex(i);
+                    Cell cellFound = cells[(int)cell.Y, (int)cell.X];
+
+                    // If the actual cell has the same LastTurnExplored value we return it
+                    if (cellFound.LastTurnExplored == oldValue && !cellFound.IsLocked)
+                    {
+                        Player.print("Cell found : " + cellFound.Position);
+                        nextCell = cellFound;
+                        break;
+                    }
+                }
+
+                if(nextCell != null)
+                {
                     break;
                 }
             }
-
+            
             // Lock cell and return its position
             nextCell.IsLocked = true;
             return nextCell.Position;
