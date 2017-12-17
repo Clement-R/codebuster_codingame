@@ -85,7 +85,6 @@ namespace CodeBuster
         public static void InitializeFSM()
         {
             // Initialize FSM
-            // TODO : Introspection ?
             if (BusterState.MoveState == null)
             {
                 BusterState.MoveState = new MoveState();

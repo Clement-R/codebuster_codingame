@@ -245,8 +245,7 @@ namespace CodeBuster
                         buster.CanStun = true;
                     }
                 }
-
-                // TODO : remove dirty fix
+                
                 foreach (var ghost in Ghosts)
                 {
                     if (ghost.Position == buster.Position)

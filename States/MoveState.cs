@@ -4,7 +4,6 @@ namespace CodeBuster
 {
     class MoveState : BusterState
     {
-        public static System.Random rng = null;
 
         public MoveState()
         {
@@ -14,7 +13,6 @@ namespace CodeBuster
         {
             if (buster.IsHoldingAGhost())
             {
-                // TODO : From actual position get the vector to the base and calculate the point that is in radius of the base (1600)
                 buster.TargetPosition = buster.BasePosition;
             }
         }
